@@ -129,12 +129,37 @@ bool checkMapCollision(GameMap const& map, Player player) {
   return false;
 }
 
+void renderToScreen(RenderTexture2D renderTarget) {
+	ClearBackground(RAYWHITE);
+
+	DrawTexturePro(
+		renderTarget.texture,
+		Rectangle{ 
+			0, 0, 
+			(float)renderTarget.texture.width, 
+			-(float)renderTarget.texture.height
+		}, 
+		Rectangle{ 
+			0, 0, 
+			(float)GetScreenWidth(), 
+			(float)GetScreenHeight()
+		}, 
+		Vector2{ 0, 0 },
+		0.0f,
+		WHITE
+	);
+}
 
 int main()
 {
 	SetTraceLogLevel(LOG_WARNING);
 	InitWindow(720, 480, "Game");
 	SetTargetFPS(60);
+	HideCursor();
+	
+	int const res_w = 1920;
+	int const res_h = 1080;
+	RenderTexture2D renderTarget = LoadRenderTexture(res_w, res_h);
 	
 	Player player1 = {
 		10.0f, 10.0f, 20.0f, 40.0f, 0.0f, 0.0f, 5.0f
@@ -157,14 +182,21 @@ int main()
 		}
 
 		// RENDER
-		//TODO: render to texture
 		//TODO: dynamic camera
-		ClearBackground(BLACK);
-
-		BeginDrawing();
-		renderLevel(testMap);
-		renderPlayer(player1);
-		EndDrawing();
+		
+		// rendering to texture
+		{
+			BeginTextureMode(renderTarget);
+			
+			ClearBackground(BLACK);
+			BeginDrawing();
+			renderLevel(testMap);
+			renderPlayer(player1);
+			EndDrawing();
+			
+			EndTextureMode();
+		}
+		renderToScreen(renderTarget);
 	}
 	CloseWindow();
 }
