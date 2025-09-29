@@ -1,47 +1,83 @@
 #include "raylib.h"
-#include <vector>
+#include "stdio.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <vector>
 
 enum Tile {
-    EMPTY,
-    TILE,
+  VOID,
+  TILE,
 };
 
 using GameMap = std::vector<std::vector<Tile>>;
 
 int const TILE_SIZE = 64;
 GameMap testMap = {
-  {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-  {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-  {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-  {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-  {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-  {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-  {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, TILE,  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-  {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, TILE,  TILE,  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-  {TILE, TILE, TILE,  TILE,  TILE,  TILE,  TILE,  TILE,  TILE,  TILE,  TILE,  TILE,  TILE,  EMPTY, EMPTY, EMPTY},
-  {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-  {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, TILE, TILE, TILE, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE,
+     TILE, TILE, TILE, TILE, TILE, TILE, TILE},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
 };
 
 enum PlayerState {
   GROUNDED = 1 << 0,
-  JUMPING  = 1 << 1,
-  SLIDING  = 1 << 2,
-  DASHING  = 1 << 3,
-  DUCKING  = 1 << 4,
+  JUMPING = 1 << 1,
+  SLIDING = 1 << 2,
+  DASHING = 1 << 3,
+  DUCKING = 1 << 4,
 };
 
 bool hasFlag(uint32_t flags, PlayerState s) { return (flags & s) != 0; }
 void setFlag(uint32_t &flags, PlayerState s) { flags |= s; }
 void clearFlag(uint32_t &flags, PlayerState s) { flags &= ~s; }
 
+struct Gun {
+  float x, y, w, h;
+  int ammo;
+  float fire_rate;
+  float projectile_speed;
+  float spread;
+  float range;
+  bool picked_up = false;
+  float cooldown = 0.0f;
+};
+
+struct Projectile {
+  float x, y;
+  float dx, dy;
+  float traveled = 0.0f;
+  float max_distance;
+};
+
 struct Player {
-  float x, y, w, h;          
-  float original_h;    
-  float dx, dy;        
+  float x, y, w, h;
+  float original_h;
+  float dx, dy;
   float max_vel;
 
   float accel, drag, gravity, jump_force;
@@ -52,281 +88,355 @@ struct Player {
   float slide_duration;
   float duck_scale;
 
+  Gun *gun = nullptr;
+
   int facing;
   uint32_t status_flags;
 };
 
-void renderLevel(GameMap const& map)
-{
-  for (unsigned y = 0; y < map.size(); ++y)
-  {
-    for (unsigned x = 0; x < map[y].size(); ++x)
-    {
-      if (map[y][x] == TILE) DrawRectangle(
-        x * TILE_SIZE,
-        y * TILE_SIZE,
-        TILE_SIZE,
-        TILE_SIZE,
-        RED
-      );
+void renderLevel(GameMap const &map) {
+  for (unsigned y = 0; y < map.size(); ++y) {
+    for (unsigned x = 0; x < map[y].size(); ++x) {
+      if (map[y][x] == TILE)
+        DrawRectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, RED);
     }
   }
 }
 
-void renderPlayer(Player const& player)
-{
-  DrawRectangle(
-    (int)player.x,
-    (int)player.y,
-    (int)player.w,
-    (int)player.h,
-    GREEN
-  );
+void renderPlayer(Player const &player) {
+  DrawRectangle((int)player.x, (int)player.y, (int)player.w, (int)player.h,
+                GREEN);
 }
 
-void handlePlayerInput(Player& player, float dt)
-{
-	//TODO: 
-	// - controller support
-	// - weapon pickups
-	// - weapons usage
-	
-  bool left = IsKeyDown(KEY_A);
-  bool right = IsKeyDown(KEY_D);
-
-  if (left) 
-	{
-    player.dx -= player.accel * dt;
-    player.facing = -1;
-  }
-  if (right) 
-	{
-    player.dx += player.accel * dt;
-    player.facing = 1;
-  }
-  if (!left && !right) 
-	{
-    if (std::fabs(player.dx) < 0.05f) player.dx = 0.0f;
-    else player.dx *= (1.0f - player.drag * dt);
-  }
-  player.dx = std::max(-player.max_vel, std::min(player.dx, player.max_vel));
-
-  if (IsKeyPressed(KEY_W) && hasFlag(player.status_flags, GROUNDED)) 
-	{
-    player.dy = -player.jump_force;
-    clearFlag(player.status_flags, GROUNDED);
-    setFlag(player.status_flags, JUMPING);
-  }
-  if (IsKeyPressed(KEY_LEFT_SHIFT) && !hasFlag(player.status_flags, DASHING)) 
-	{
-    setFlag(player.status_flags, DASHING);
-    player.dash_timer = player.dash_duration;
-  		
-		int dir = player.facing; 
-		if (left) dir = -1;
-		if (right) dir = 1;
-
-    player.dx = dir * player.dash_speed;
-  }
-  if (hasFlag(player.status_flags, DASHING)) 
-	{
-    player.dash_timer -= dt;
-    if (player.dash_timer <= 0.0f) 
-		{
-      clearFlag(player.status_flags, DASHING);
-      
-			// reduce speed after dash to avoid instant stop
-      if (std::fabs(player.dx) > player.max_vel) 
-			{
-        player.dx = (player.dx > 0 ? player.max_vel : -player.max_vel);
-      }
-    }
-  }
-	if (IsKeyDown(KEY_S)) 
-	{
-	  if (hasFlag(player.status_flags, GROUNDED)) 
-		{
-	    if (IsKeyPressed(KEY_S) && 
-	      !hasFlag(player.status_flags, SLIDING) &&
-	      std::fabs(player.dx) > 50.0f //sliding threshold
-			) 
-	    {
-	      setFlag(player.status_flags, SLIDING);
-	      player.slide_timer = player.slide_duration;
-	      if (!hasFlag(player.status_flags, DUCKING)) 
-				{
-	        setFlag(player.status_flags, DUCKING);
-	        float new_h = player.original_h * player.duck_scale;
-	        player.y += (player.h - new_h);
-	        player.h = new_h;
-	      }
-	      player.dx = (player.facing >= 0 ? player.max_vel : -player.max_vel) * 1.2f;
-	    }
-	    else if (!hasFlag(player.status_flags, SLIDING)) 
-			{
-	      if (!hasFlag(player.status_flags, DUCKING)) 
-				{
-	        setFlag(player.status_flags, DUCKING);
-	        float new_h = player.original_h * player.duck_scale;
-	        player.y += (player.h - new_h);
-	        player.h = new_h;
-	      }
-	    }
-	  }
-	}
-	else 
-	{
-    if (hasFlag(player.status_flags, DUCKING)) 
-		{
-      clearFlag(player.status_flags, DUCKING);
-      player.y -= (player.original_h - player.h); 
-      player.h = player.original_h;
-    }
-	}
-	
-	// TODO: probably move this out once i have a proper update player func
-  if (!hasFlag(player.status_flags, GROUNDED)) {
-      player.dy += player.gravity * dt;
-  }
-
-  if (std::fabs(player.dx) < 0.001f) player.dx = 0.0f;
-  if (std::fabs(player.dy) < 0.001f) player.dy = 0.0f;
-}
-
-bool checkMapCollision(GameMap const& map, Player const& player) {
-  Rectangle rect = {
-    player.x,
-    player.y,
-    player.w,
-    player.h
-  };
+bool hasMapCollision(GameMap const &map, Player const &player) {
+  Rectangle rect = {player.x, player.y, player.w, player.h};
 
   int rows = (int)map.size();
   int cols = map.empty() ? 0 : (int)map[0].size();
 
-  int left   = std::max(0, (int)std::floor(rect.x / TILE_SIZE));
-  int right  = std::min(cols - 1, (int)std::floor((rect.x + rect.width) / TILE_SIZE));
-  int top    = std::max(0, (int)std::floor(rect.y / TILE_SIZE));
-  int bottom = std::min(rows - 1, (int)std::floor((rect.y + rect.height) / TILE_SIZE));
+  int left = std::max(0, (int)std::floor(rect.x / TILE_SIZE));
+  int right =
+      std::min(cols - 1, (int)std::floor((rect.x + rect.width) / TILE_SIZE));
+  int top = std::max(0, (int)std::floor(rect.y / TILE_SIZE));
+  int bottom =
+      std::min(rows - 1, (int)std::floor((rect.y + rect.height) / TILE_SIZE));
 
-  for (int y = top; y <= bottom; ++y) 
-	{
-    for (int x = left; x <= right; ++x) 
-		{
+  for (int y = top; y <= bottom; ++y) {
+    for (int x = left; x <= right; ++x) {
       if (map[y][x] == TILE) {
-        Rectangle tile = {
-          (float)x * TILE_SIZE,
-          (float)y * TILE_SIZE,
-          (float)TILE_SIZE,
-          (float)TILE_SIZE
-        };
-        if (CheckCollisionRecs(rect, tile)) return true;
+        Rectangle tile = {(float)x * TILE_SIZE, (float)y * TILE_SIZE,
+                          (float)TILE_SIZE, (float)TILE_SIZE};
+        if (CheckCollisionRecs(rect, tile))
+          return true;
       }
     }
   }
   return false;
 }
 
+void handlePlayerCollision(Player &player, GameMap const &map, float const dt) {
+  float move_x = player.dx * dt;
+  player.x += move_x;
+  if (hasMapCollision(testMap, player)) {
+    player.x -= move_x;
+    player.dx = 0.0f;
+  }
+  float move_y = player.dy * dt;
+  player.y += move_y;
+  if (hasMapCollision(testMap, player)) {
+    player.y -= move_y;
+    if (move_y > 0.0f) {
+      player.dy = 0.0f;
+      setFlag(player.status_flags, GROUNDED);
+      clearFlag(player.status_flags, JUMPING);
+    } else if (move_y < 0.0f) {
+      player.dy = 0.0f;
+    }
+  } else {
+    clearFlag(player.status_flags, GROUNDED);
+  }
+}
+void handlePlayerInput(Player &player, float dt) {
+  bool left = IsKeyDown(KEY_A);
+  bool right = IsKeyDown(KEY_D);
+
+  // horizontal movement
+  float accel_mod = (hasFlag(player.status_flags, DUCKING) &&
+                     hasFlag(player.status_flags, GROUNDED))
+                        ? 0.2f
+                        : 1.0f;
+  if (!hasFlag(player.status_flags, SLIDING)) {
+    if (left) {
+      player.dx -= player.accel * dt;
+      player.facing = -1;
+    }
+    if (right) {
+      player.dx += player.accel * dt;
+      player.facing = 1;
+    }
+    if (!left && !right) {
+      if (std::fabs(player.dx) < 0.05f)
+        player.dx = 0.0f;
+      else
+        player.dx *= (1.0f - player.drag * dt);
+    }
+  } else {
+    float const sliding_drag_reduction = 0.2f;
+    player.dx *= (1.0f - player.drag * sliding_drag_reduction * dt);
+  }
+
+  player.dx =
+      std::clamp(player.dx, -player.max_vel, player.max_vel * accel_mod);
+
+  // jump
+  if (IsKeyDown(KEY_SPACE) && hasFlag(player.status_flags, GROUNDED)) {
+    player.dy = -player.jump_force;
+    clearFlag(player.status_flags, GROUNDED);
+    setFlag(player.status_flags, JUMPING);
+  }
+
+  // variable jump height
+  if (IsKeyReleased(KEY_SPACE) && player.dy < -player.jump_force * 0.5f) {
+    player.dy *= 0.5f; // cut upward velocity when jump key is released
+  }
+
+  // dash
+  if (IsKeyPressed(KEY_LEFT_SHIFT) && !hasFlag(player.status_flags, DASHING)) {
+    setFlag(player.status_flags, DASHING);
+    player.dash_timer = player.dash_duration;
+
+    int dir = player.facing;
+    if (left)
+      dir = -1;
+    if (right)
+      dir = 1;
+
+    player.dx = dir * player.dash_speed;
+  }
+  if (hasFlag(player.status_flags, DASHING)) {
+    player.dash_timer -= dt;
+    if (player.dash_timer <= 0.0f) {
+      clearFlag(player.status_flags, DASHING);
+      if (std::fabs(player.dx) > player.max_vel) {
+        player.dx = (player.dx > 0 ? player.max_vel : -player.max_vel);
+      }
+    }
+  }
+
+  // Ducking / Sliding
+  float const sliding_threshold = 20.0f;
+  if (IsKeyDown(KEY_S)) {
+    if (hasFlag(player.status_flags, GROUNDED)) {
+      if (!hasFlag(player.status_flags, SLIDING) &&
+          std::fabs(player.dx) > sliding_threshold) {
+        setFlag(player.status_flags, SLIDING);
+        float new_h = player.original_h * player.duck_scale;
+        player.y += (player.h - new_h);
+        player.h = new_h;
+        player.slide_timer = player.slide_duration;
+      }
+    }
+    if (!hasFlag(player.status_flags, SLIDING) &&
+        !hasFlag(player.status_flags, DUCKING)) {
+      setFlag(player.status_flags, DUCKING);
+      float new_h = player.original_h * player.duck_scale;
+      player.y += (player.h - new_h);
+      player.h = new_h;
+    }
+  } else {
+    float old_h = player.h;
+    float new_h = player.original_h;
+    float diff = new_h - old_h;
+
+    Player test = player;
+    test.y -= diff;
+    test.h = new_h;
+
+    if (!hasMapCollision(testMap, test)) {
+      // Safe to stand
+      clearFlag(player.status_flags, DUCKING);
+      clearFlag(player.status_flags, SLIDING);
+      player.y -= diff;
+      player.h = new_h;
+    } else {
+      setFlag(player.status_flags, DUCKING);
+    }
+  }
+
+  // slide exit conditions
+  if (hasFlag(player.status_flags, SLIDING)) {
+    player.slide_timer -= dt;
+
+    if (player.slide_timer <= 0.0f || std::fabs(player.dx) < 30.0f) {
+      clearFlag(player.status_flags, SLIDING);
+    }
+  }
+
+  // gravity
+  if (!hasFlag(player.status_flags, GROUNDED)) {
+    player.dy += player.gravity * dt;
+  }
+
+  if (std::fabs(player.dx) < 0.001f)
+    player.dx = 0.0f;
+  if (std::fabs(player.dy) < 0.001f)
+    player.dy = 0.0f;
+}
+
+void handleGunPickups(Player &player, std::vector<Gun> &guns) {
+  Rectangle playerRect = {player.x, player.y, player.w, player.h};
+  for (Gun &gun : guns) {
+    if (!gun.picked_up) {
+      Rectangle gunRect = {gun.x, gun.y, gun.w, gun.h};
+      if (CheckCollisionRecs(playerRect, gunRect)) {
+        gun.picked_up = true;
+        player.gun = &gun;
+        break;
+      }
+    }
+  }
+}
+
+void handleShooting(Player &player, std::vector<Projectile> &projectiles,
+                    float dt) {
+  if (!player.gun) {
+    return;
+  }
+
+  Gun *gun = player.gun;
+
+  if (gun->cooldown > 0.0f) {
+    gun->cooldown -= dt;
+  }
+
+  if (IsKeyDown(KEY_J) && gun->ammo > 0 && gun->cooldown <= 0.0f) {
+    gun->cooldown = 1.0f / gun->fire_rate;
+    gun->ammo--;
+
+    float baseAngle = (player.facing == -1) ? M_PI : 0.0f;
+    float speed_factor = std::min(1.0f, std::fabs(player.dx) / player.max_vel);
+    float spread_angle = gun->spread * (1.0f + speed_factor * 2.0f);
+
+    float angle =
+        baseAngle + ((rand() / (float)RAND_MAX) - 0.5f) * spread_angle;
+
+    float vx = cosf(angle) * gun->projectile_speed;
+    float vy = sinf(angle) * gun->projectile_speed;
+
+    projectiles.push_back({player.x + player.w / 2, player.y + player.h / 2, vx,
+                           vy, 0.0f, gun->range});
+  }
+}
+
+void updateProjectiles(std::vector<Projectile> &projectiles, float dt,
+                       GameMap const &map) {
+  for (size_t i = 0; i < projectiles.size();) {
+    Projectile &p = projectiles[i];
+    float move_x = p.dx * dt;
+    float move_y = p.dy * dt;
+    p.x += move_x;
+    p.y += move_y;
+    p.traveled += sqrtf(move_x * move_x + move_y * move_y);
+
+    Rectangle rect = {p.x, p.y, 8, 8};
+    if (p.traveled >= p.max_distance ||
+        hasMapCollision(map, *(Player *)&rect)) {
+      projectiles[i] = projectiles.back();
+      projectiles.pop_back();
+      continue;
+    }
+    i++;
+  }
+}
+
+void renderGuns(std::vector<Gun> const &guns) {
+  for (auto const &gun : guns) {
+    if (!gun.picked_up) {
+      DrawRectangle(gun.x, gun.y, gun.w, gun.h, BLUE);
+    }
+  }
+}
+
+void renderProjectiles(std::vector<Projectile> const &projectiles) {
+  for (auto const &p : projectiles) {
+    DrawRectangle((int)p.x, (int)p.y, 8, 8, YELLOW);
+  }
+}
+
 void renderToScreen(RenderTexture2D renderTarget) {
   ClearBackground(RAYWHITE);
   DrawTexturePro(
-    renderTarget.texture,
-    Rectangle{
-      0, 0,
-      (float)renderTarget.texture.width,
-      -(float)renderTarget.texture.height
-    },
-    Rectangle{
-      0, 0,
-      (float)GetScreenWidth(),
-      (float)GetScreenHeight()
-    },
-    Vector2{ 0, 0 },
-    0.0f,
-    WHITE
-  );
+      renderTarget.texture,
+      Rectangle{0, 0, (float)renderTarget.texture.width,
+                -(float)renderTarget.texture.height},
+      Rectangle{0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()},
+      Vector2{0, 0}, 0.0f, WHITE);
 }
 
-int main()
-{
+Player initPlayer() {
+  Player player = {};
+  player.x = 10.0f;
+  player.y = 10.0f;
+  player.w = 60.0f;
+  player.h = 80.0f;
+  player.original_h = player.h;
+  player.dx = 0.0f;
+  player.dy = 0.0f;
+  player.max_vel = 300.0f;
+
+  player.accel = 1200.0f;
+  player.drag = 6.0f;
+  player.gravity = 2000.0f;
+  player.jump_force = 1000.0f;
+
+  player.dash_speed = 3000.0f;
+  player.dash_duration = 1.00;
+  player.slide_duration = 0.5f;
+  player.duck_scale = 0.6f;
+
+  player.dash_timer = 0.0f;
+  player.slide_timer = 0.0f;
+
+  player.facing = 1;
+
+  player.status_flags = 0;
+  setFlag(player.status_flags, GROUNDED);
+
+  return player;
+}
+
+int main() {
   SetTraceLogLevel(LOG_WARNING);
-  InitWindow(720, 480, "Game (fixed)");
+  InitWindow(1080, 720, "Game");
   SetTargetFPS(60);
   HideCursor();
 
   int const res_w = 1920;
   int const res_h = 1080;
   RenderTexture2D renderTarget = LoadRenderTexture(res_w, res_h);
-	
-	//TODO: player constructor
-  Player player1 = {};
-  player1.x = 10.0f;
-  player1.y = 10.0f;
-  player1.w = 20.0f;
-  player1.h = 40.0f;
-  player1.original_h = player1.h;
-  player1.dx = 0.0f;
-  player1.dy = 0.0f;
-  player1.max_vel = 300.0f; 
 
-  player1.accel = 1200.0f; 
-  player1.drag = 6.0f;     
-  player1.gravity = 2000.0f; 
-  player1.jump_force = 700.0f;
+  Player player1 = initPlayer();
+  std::vector<Gun> guns;
+  std::vector<Projectile> projectiles;
 
-  player1.dash_speed = 700.0f;
-  player1.dash_duration = 0.18f; 
-  player1.slide_duration = 0.6f;
-  player1.duck_scale = 0.5f;
+  Gun pistol = {200, 200, 60, 30, 30, 5.0f, 800.0f, 0.15f, 600.0f};
+  guns.push_back(pistol);
 
-  player1.dash_timer = 0.0f;
-  player1.slide_timer = 0.0f;
-
-  player1.facing = 1;
-
-  player1.status_flags = 0;
-  setFlag(player1.status_flags, GROUNDED); 
-
-  while (!WindowShouldClose())
-  {
+  while (!WindowShouldClose()) {
     float dt = GetFrameTime();
-
     handlePlayerInput(player1, dt);
-
-    float move_x = player1.dx * dt;
-    player1.x += move_x;
-    if (checkMapCollision(testMap, player1)) 
-		{
-      player1.x -= move_x;
-      player1.dx = 0.0f;
-    }
-    float move_y = player1.dy * dt;
-    player1.y += move_y;
-    if (checkMapCollision(testMap, player1)) 
-		{
-      player1.y -= move_y;
-      if (move_y > 0.0f) 
-			{
-        player1.dy = 0.0f;
-        setFlag(player1.status_flags, GROUNDED);
-        clearFlag(player1.status_flags, JUMPING);
-      } 
-			else if (move_y < 0.0f) 
-			{
-        player1.dy = 0.0f;
-        clearFlag(player1.status_flags, JUMPING);
-      }
-    } 
-		else 
-		{
-      clearFlag(player1.status_flags, GROUNDED);
-    }
+    handlePlayerCollision(player1, testMap, dt);
+    handleGunPickups(player1, guns);
+    handleShooting(player1, projectiles, dt);
+    updateProjectiles(projectiles, dt, testMap);
 
     BeginTextureMode(renderTarget);
     ClearBackground(BLACK);
     BeginDrawing();
     renderLevel(testMap);
     renderPlayer(player1);
+    renderGuns(guns);
+    renderProjectiles(projectiles);
     EndDrawing();
     EndTextureMode();
 
