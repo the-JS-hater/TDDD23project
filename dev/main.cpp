@@ -5,6 +5,10 @@
 #include <cstdint>
 #include <vector>
 
+Texture testDudeTex;
+
+
+
 enum Tile {
   VOID,
   TILE,
@@ -14,34 +18,20 @@ using GameMap = std::vector<std::vector<Tile>>;
 
 int const TILE_SIZE = 64;
 GameMap testMap = {
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
-     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, TILE, TILE, TILE, VOID, VOID, VOID, VOID, VOID,
-     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
-     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
-     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
-     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
-     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID,
-     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
-     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
-     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID, VOID,
-     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID,
-     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE,
-     TILE, TILE, TILE, TILE, TILE, TILE, TILE},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
-     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
-     VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, TILE, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
 };
 
 enum PlayerState {
@@ -104,9 +94,65 @@ void renderLevel(GameMap const &map) {
 }
 
 void renderPlayer(Player const &player) {
-  DrawRectangle((int)player.x, (int)player.y, (int)player.w, (int)player.h,
-                GREEN);
+    Rectangle src = {
+        0.0f, 
+        0.0f, 
+        (float)testDudeTex.width, 
+        (float)testDudeTex.height
+    };
+
+    Rectangle dst = {
+        player.x, 
+        player.y, 
+        player.w, 
+        player.h
+    };
+    
+		if (player.facing < 0) {
+        src.width = -src.width;
+    }
+
+    Vector2 origin = {0.0f, 0.0f};
+
+    DrawTexturePro(testDudeTex, src, dst, origin, 0.0f, WHITE);
+		
+		float shoulderY = player.y + player.h * 0.30;
+    float shoulderX = (player.facing < 0) ? player.x + player.w : player.x;
+
+    float armThickness = player.w * 0.50;       
+    float armLength    = player.h * 0.30;       
+
+    if (!player.gun) {
+        Rectangle arm = {
+            shoulderX - armThickness * 0.5f,
+            shoulderY,
+            armThickness,
+            armLength
+        };
+        DrawRectangleRec(arm, DARKBROWN);
+    } else {
+        float armX = (player.facing == 1) ? shoulderX : shoulderX - armLength;
+        Rectangle arm = {
+            armX,
+            shoulderY - armThickness * 0.5f,
+            armLength,
+            armThickness
+        };
+        DrawRectangleRec(arm, DARKBROWN);
+
+        Gun const *gun = player.gun;
+        float gunScale = player.h / 200.0f; 
+        float gunW = gun->w * gunScale;
+        float gunH = gun->h * gunScale;
+
+        float gunX = (player.facing == 1) ? arm.x + arm.width : arm.x - gunW;
+        float gunY = arm.y + arm.height/2.0f - gunH/2.0f;
+
+        Rectangle gunRect = {gunX, gunY, gunW, gunH};
+        DrawRectangleRec(gunRect, BLUE);
+    }
 }
+
 
 bool hasMapCollision(GameMap const &map, Player const &player) {
   Rectangle rect = {player.x, player.y, player.w, player.h};
@@ -304,6 +350,10 @@ void handleShooting(Player &player, std::vector<Projectile> &projectiles,
   }
 
   Gun *gun = player.gun;
+	if (gun->ammo <= 0) {
+		player.gun = nullptr;
+		return;
+	}
 
   if (gun->cooldown > 0.0f) {
     gun->cooldown -= dt;
@@ -323,10 +373,62 @@ void handleShooting(Player &player, std::vector<Projectile> &projectiles,
     float vx = cosf(angle) * gun->projectile_speed;
     float vy = sinf(angle) * gun->projectile_speed;
 
-    projectiles.push_back({player.x + player.w / 2, player.y + player.h / 2, vx,
+    projectiles.push_back({player.x + player.w, player.y + (int)(player.h * 0.30), vx,
                            vy, 0.0f, gun->range});
   }
 }
+
+Gun spawnRandomGun(GameMap const &map, int screenWidth, int screenHeight) {
+    Gun gun = {};
+    gun.w = 60;
+    gun.h = 30;
+    gun.ammo = 30;
+    gun.fire_rate = 5.0f;
+    gun.projectile_speed = 800.0f;
+    gun.spread = 0.15f;
+    gun.range = 600.0f;
+    gun.picked_up = false;
+    gun.cooldown = 0.0f;
+
+    while (true) {
+        int x = GetRandomValue(0, screenWidth - gun.w);
+        int y = GetRandomValue(0, screenHeight - gun.h);
+
+        Rectangle rect = {(float)x, (float)y, gun.w, gun.h};
+
+        bool collision = false;
+        int rows = (int)map.size();
+        int cols = map.empty() ? 0 : (int)map[0].size();
+
+        int left = std::max(0, (int)std::floor(rect.x / TILE_SIZE));
+        int right =
+            std::min(cols - 1, (int)std::floor((rect.x + rect.width) / TILE_SIZE));
+        int top = std::max(0, (int)std::floor(rect.y / TILE_SIZE));
+        int bottom =
+            std::min(rows - 1, (int)std::floor((rect.y + rect.height) / TILE_SIZE));
+
+        for (int yy = top; yy <= bottom && !collision; ++yy) {
+            for (int xx = left; xx <= right && !collision; ++xx) {
+                if (map[yy][xx] == TILE) {
+                    Rectangle tile = {(float)xx * TILE_SIZE, (float)yy * TILE_SIZE,
+                                      (float)TILE_SIZE, (float)TILE_SIZE};
+                    if (CheckCollisionRecs(rect, tile)) {
+                        collision = true;
+                    }
+                }
+            }
+        }
+
+        if (!collision) {
+            gun.x = (float)x;
+            gun.y = (float)y;
+            break;
+        }
+    }
+
+    return gun;
+}
+
 
 void updateProjectiles(std::vector<Projectile> &projectiles, float dt,
                        GameMap const &map) {
@@ -377,8 +479,8 @@ Player initPlayer() {
   Player player = {};
   player.x = 10.0f;
   player.y = 10.0f;
-  player.w = 60.0f;
-  player.h = 80.0f;
+  player.w = 80.0f;
+  player.h = 200.0f;
   player.original_h = player.h;
   player.dx = 0.0f;
   player.dy = 0.0f;
@@ -392,7 +494,7 @@ Player initPlayer() {
   player.dash_speed = 3000.0f;
   player.dash_duration = 1.00;
   player.slide_duration = 0.5f;
-  player.duck_scale = 0.6f;
+  player.duck_scale = 0.3f;
 
   player.dash_timer = 0.0f;
   player.slide_timer = 0.0f;
@@ -405,22 +507,31 @@ Player initPlayer() {
   return player;
 }
 
+void init_resources(){
+	testDudeTex = LoadTexture("resources/dude75x100.png");
+}
+
+
 int main() {
   SetTraceLogLevel(LOG_WARNING);
   InitWindow(1080, 720, "Game");
   SetTargetFPS(60);
   HideCursor();
+	
+	init_resources();
 
   int const res_w = 1920;
   int const res_h = 1080;
   RenderTexture2D renderTarget = LoadRenderTexture(res_w, res_h);
-
+	
   Player player1 = initPlayer();
   std::vector<Gun> guns;
   std::vector<Projectile> projectiles;
 
-  Gun pistol = {200, 200, 60, 30, 30, 5.0f, 800.0f, 0.15f, 600.0f};
-  guns.push_back(pistol);
+	for (int i = 0; i < 3; i++) {
+	    guns.push_back(spawnRandomGun(testMap, res_w, res_h));
+	}
+
 
   while (!WindowShouldClose()) {
     float dt = GetFrameTime();
