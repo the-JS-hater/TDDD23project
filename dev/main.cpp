@@ -20,28 +20,32 @@ using GameMap = std::vector<std::vector<Tile>>;
 
 int const TILE_SIZE = 64;
 GameMap testMap = {
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, TILE, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, TILE, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE},
 };
 
 enum PlayerState {
-  GROUNDED = 1 << 0,
-  JUMPING = 1 << 1,
-  SLIDING = 1 << 2,
-  DASHING = 1 << 3,
-  DUCKING = 1 << 4,
+  GROUNDED 	= 1 << 0,
+  JUMPING 	= 1 << 1,
+  SLIDING 	= 1 << 2,
+  DASHING 	= 1 << 3,
+  DUCKING 	= 1 << 4,
+  ALIVE 		= 1 << 5,
 };
 
 bool hasFlag(uint32_t flags, PlayerState s) { return (flags & s) != 0; }
@@ -84,6 +88,9 @@ struct Player {
   float dash_duration;
   float slide_duration;
   float duck_scale;
+
+	int health;
+  int max_health;
 
   Gun *gun = nullptr;
 
@@ -459,7 +466,7 @@ Gun spawnRandomGun(GameMap const &map, int screenWidth, int screenHeight) {
 
 
 void updateProjectiles(std::vector<Projectile> &projectiles, float dt,
-                       GameMap const &map) {
+                       GameMap const &map, std::vector<Player> &players) {
   for (size_t i = 0; i < projectiles.size();) {
     Projectile &p = projectiles[i];
     float move_x = p.dx * dt;
@@ -469,13 +476,32 @@ void updateProjectiles(std::vector<Projectile> &projectiles, float dt,
     p.traveled += sqrtf(move_x * move_x + move_y * move_y);
 
     Rectangle rect = {p.x, p.y, 8, 8};
-    if (p.traveled >= p.max_distance ||
-        hasMapCollision(map, *(Player *)&rect)) {
+
+    bool remove = false;
+
+    if (p.traveled >= p.max_distance || hasMapCollision(map, *(Player *)&rect)) {
+      remove = true;
+    } else {
+      for (auto &pl : players) {
+        if (!(hasFlag(pl.status_flags, ALIVE))) continue;
+
+        Rectangle prect = {pl.x, pl.y, pl.w, pl.h};
+        if (CheckCollisionRecs(rect, prect)) {
+          pl.health -= 25; 
+          if (pl.health <= 0) {
+						clearFlag(pl.status_flags, ALIVE);
+          }
+          remove = true;
+          break;
+        }
+      }
+    }
+    if (remove) {
       projectiles[i] = projectiles.back();
       projectiles.pop_back();
-      continue;
+    } else {
+      i++;
     }
-    i++;
   }
 }
 
@@ -487,11 +513,13 @@ void renderGuns(std::vector<Gun> const &guns) {
   }
 }
 
+
 void renderProjectiles(std::vector<Projectile> const &projectiles) {
   for (auto const &p : projectiles) {
     DrawRectangle((int)p.x, (int)p.y, 8, 8, YELLOW);
   }
 }
+
 
 void renderToScreen(RenderTexture2D renderTarget) {
   ClearBackground(BLACK);
@@ -540,6 +568,10 @@ Player initPlayer() {
 
   player.status_flags = 0;
   setFlag(player.status_flags, GROUNDED);
+	
+	player.max_health = 100;
+	player.health = player.max_health;
+  setFlag(player.status_flags, ALIVE);
 
   return player;
 }
@@ -564,45 +596,52 @@ int main() {
   std::vector<Gun> guns;
   std::vector<Projectile> projectiles;
   
-	Player player0 = initPlayer();
-	Controls keyboard0 = {
-    -1,             
-    KEY_A, KEY_D,   
-    KEY_W, KEY_S,   
-    KEY_SPACE,      
-    KEY_LEFT_SHIFT, 
-    KEY_J           
-	};
-	Controls gamepad0 = {
-	    0,  
-	    GAMEPAD_BUTTON_LEFT_FACE_LEFT,
-	    GAMEPAD_BUTTON_LEFT_FACE_RIGHT,
-	    GAMEPAD_BUTTON_LEFT_FACE_UP,
-	    GAMEPAD_BUTTON_LEFT_FACE_DOWN,
-	    GAMEPAD_BUTTON_RIGHT_FACE_DOWN, 
-	    GAMEPAD_BUTTON_RIGHT_FACE_RIGHT,
-	    GAMEPAD_BUTTON_RIGHT_TRIGGER_1  
-	};
-	player0.controls = keyboard0;
+  Player player0 = initPlayer();
+  player0.controls = {
+      -1,             
+      KEY_A, KEY_D,   
+      KEY_W, KEY_S,   
+      KEY_SPACE,      
+      KEY_LEFT_SHIFT, 
+      KEY_J           
+  };
+  Player player1 = initPlayer();
+  player1.x = 500.0f;  
+  player1.controls = {
+      0,  
+      GAMEPAD_BUTTON_LEFT_FACE_LEFT,
+      GAMEPAD_BUTTON_LEFT_FACE_RIGHT,
+      GAMEPAD_BUTTON_LEFT_FACE_UP,
+      GAMEPAD_BUTTON_LEFT_FACE_DOWN,
+      GAMEPAD_BUTTON_RIGHT_FACE_DOWN,  
+      GAMEPAD_BUTTON_RIGHT_FACE_RIGHT, 
+      GAMEPAD_BUTTON_RIGHT_TRIGGER_1   
+  };
+	std::vector<Player> players{player0, player1};
 
 	for (int i = 0; i < 3; i++) {
 	    guns.push_back(spawnRandomGun(testMap, RES_W, RES_H));
 	}
 
-
   while (!WindowShouldClose()) {
     float dt = GetFrameTime();
-    handlePlayerInput(player0, dt);
-    handlePlayerCollision(player0, testMap, dt);
-    handleGunPickups(player0, guns);
-    handleShooting(player0, projectiles, dt);
-    updateProjectiles(projectiles, dt, testMap);
+   	
+		for (Player &player: players) {
+			handlePlayerInput(player, dt);
+    	handlePlayerCollision(player, testMap, dt);
+    	handleGunPickups(player, guns);
+    	handleShooting(player, projectiles, dt);
+		}
+		updateProjectiles(projectiles, dt, testMap, players);
 
     BeginTextureMode(renderTarget);
     ClearBackground(BLACK);
     BeginDrawing();
     renderLevel(testMap);
-    renderPlayer(player0);
+		for (Player &player: players) {
+    	if (!hasFlag(player.status_flags, ALIVE)) { continue; };
+			renderPlayer(player);
+		}
     renderGuns(guns);
     renderProjectiles(projectiles);
     EndDrawing();
