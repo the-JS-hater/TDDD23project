@@ -6,8 +6,10 @@
 #include <vector>
 
 Texture testDudeTex;
+Texture testBoxBunny; 
 
-
+int const RES_W = 1920;
+int const RES_H = 1080;
 
 enum Tile {
   VOID,
@@ -64,6 +66,11 @@ struct Projectile {
   float max_distance;
 };
 
+struct Controls {
+    int deviceId; 
+    int left, right, up, down, jump, dash, fire;
+};
+
 struct Player {
   float x, y, w, h;
   float original_h;
@@ -82,7 +89,33 @@ struct Player {
 
   int facing;
   uint32_t status_flags;
+
+	Controls controls;
 };
+
+bool isActionDown(Controls const &c, int action) {
+    if (c.deviceId == -1) {
+        return IsKeyDown(action);
+    } else {
+        return IsGamepadButtonDown(c.deviceId, action);
+    }
+}
+
+bool isActionPressed(Controls const &c, int action) {
+    if (c.deviceId == -1) {
+        return IsKeyPressed(action);
+    } else {
+        return IsGamepadButtonPressed(c.deviceId, action);
+    }
+}
+
+bool isActionReleased(Controls const &c, int action) {
+    if (c.deviceId == -1) {
+        return IsKeyReleased(action);
+    } else {
+        return IsGamepadButtonReleased(c.deviceId, action);
+    }
+}
 
 void renderLevel(GameMap const &map) {
   for (unsigned y = 0; y < map.size(); ++y) {
@@ -97,8 +130,8 @@ void renderPlayer(Player const &player) {
     Rectangle src = {
         0.0f, 
         0.0f, 
-        (float)testDudeTex.width, 
-        (float)testDudeTex.height
+        (float)testBoxBunny.width, 
+        (float)testBoxBunny.height
     };
 
     Rectangle dst = {
@@ -114,7 +147,7 @@ void renderPlayer(Player const &player) {
 
     Vector2 origin = {0.0f, 0.0f};
 
-    DrawTexturePro(testDudeTex, src, dst, origin, 0.0f, WHITE);
+    DrawTexturePro(testBoxBunny, src, dst, origin, 0.0f, WHITE);
 		
 		float shoulderY = player.y + player.h * 0.30;
     float shoulderX = (player.facing < 0) ? player.x + player.w : player.x;
@@ -129,7 +162,7 @@ void renderPlayer(Player const &player) {
             armThickness,
             armLength
         };
-        DrawRectangleRec(arm, DARKBROWN);
+        DrawRectangleRec(arm, WHITE);
     } else {
         float armX = (player.facing == 1) ? shoulderX : shoulderX - armLength;
         Rectangle arm = {
@@ -138,10 +171,10 @@ void renderPlayer(Player const &player) {
             armLength,
             armThickness
         };
-        DrawRectangleRec(arm, DARKBROWN);
+        DrawRectangleRec(arm, WHITE);
 
         Gun const *gun = player.gun;
-        float gunScale = player.h / 200.0f; 
+        float gunScale = player.h / 100.0f; 
         float gunW = gun->w * gunScale;
         float gunH = gun->h * gunScale;
 
@@ -149,7 +182,7 @@ void renderPlayer(Player const &player) {
         float gunY = arm.y + arm.height/2.0f - gunH/2.0f;
 
         Rectangle gunRect = {gunX, gunY, gunW, gunH};
-        DrawRectangleRec(gunRect, BLUE);
+        DrawRectangleRec(gunRect, BLACK);
     }
 }
 
@@ -202,12 +235,13 @@ void handlePlayerCollision(Player &player, GameMap const &map, float const dt) {
     clearFlag(player.status_flags, GROUNDED);
   }
 }
-void handlePlayerInput(Player &player, float dt) {
-  bool left = IsKeyDown(KEY_A);
-  bool right = IsKeyDown(KEY_D);
 
-  // horizontal movement
-  float accel_mod = (hasFlag(player.status_flags, DUCKING) &&
+
+void handlePlayerInput(Player &player, float dt) {
+	bool left  = isActionDown(player.controls, player.controls.left);
+	bool right = isActionDown(player.controls, player.controls.right);
+  
+	float accel_mod = (hasFlag(player.status_flags, DUCKING) &&
                      hasFlag(player.status_flags, GROUNDED))
                         ? 0.2f
                         : 1.0f;
@@ -233,21 +267,18 @@ void handlePlayerInput(Player &player, float dt) {
 
   player.dx =
       std::clamp(player.dx, -player.max_vel, player.max_vel * accel_mod);
+	
+	if (isActionDown(player.controls, player.controls.jump) && hasFlag(player.status_flags, GROUNDED)) {
+	    player.dy = -player.jump_force;
+	    clearFlag(player.status_flags, GROUNDED);
+	    setFlag(player.status_flags, JUMPING);
+	}
 
-  // jump
-  if (IsKeyDown(KEY_SPACE) && hasFlag(player.status_flags, GROUNDED)) {
-    player.dy = -player.jump_force;
-    clearFlag(player.status_flags, GROUNDED);
-    setFlag(player.status_flags, JUMPING);
+  if (isActionReleased(player.controls, player.controls.jump) && player.dy < -player.jump_force * 0.5f) {
+    player.dy *= 0.5f; 
   }
 
-  // variable jump height
-  if (IsKeyReleased(KEY_SPACE) && player.dy < -player.jump_force * 0.5f) {
-    player.dy *= 0.5f; // cut upward velocity when jump key is released
-  }
-
-  // dash
-  if (IsKeyPressed(KEY_LEFT_SHIFT) && !hasFlag(player.status_flags, DASHING)) {
+  if (isActionPressed(player.controls, player.controls.dash) && !hasFlag(player.status_flags, DASHING)) {
     setFlag(player.status_flags, DASHING);
     player.dash_timer = player.dash_duration;
 
@@ -269,9 +300,8 @@ void handlePlayerInput(Player &player, float dt) {
     }
   }
 
-  // Ducking / Sliding
   float const sliding_threshold = 20.0f;
-  if (IsKeyDown(KEY_S)) {
+  if (isActionDown(player.controls, player.controls.down)) {
     if (hasFlag(player.status_flags, GROUNDED)) {
       if (!hasFlag(player.status_flags, SLIDING) &&
           std::fabs(player.dx) > sliding_threshold) {
@@ -299,7 +329,6 @@ void handlePlayerInput(Player &player, float dt) {
     test.h = new_h;
 
     if (!hasMapCollision(testMap, test)) {
-      // Safe to stand
       clearFlag(player.status_flags, DUCKING);
       clearFlag(player.status_flags, SLIDING);
       player.y -= diff;
@@ -309,7 +338,6 @@ void handlePlayerInput(Player &player, float dt) {
     }
   }
 
-  // slide exit conditions
   if (hasFlag(player.status_flags, SLIDING)) {
     player.slide_timer -= dt;
 
@@ -318,7 +346,6 @@ void handlePlayerInput(Player &player, float dt) {
     }
   }
 
-  // gravity
   if (!hasFlag(player.status_flags, GROUNDED)) {
     player.dy += player.gravity * dt;
   }
@@ -330,7 +357,10 @@ void handlePlayerInput(Player &player, float dt) {
 }
 
 void handleGunPickups(Player &player, std::vector<Gun> &guns) {
-  Rectangle playerRect = {player.x, player.y, player.w, player.h};
+  if (player.gun) {
+		return;
+	}
+	Rectangle playerRect = {player.x, player.y, player.w, player.h};
   for (Gun &gun : guns) {
     if (!gun.picked_up) {
       Rectangle gunRect = {gun.x, gun.y, gun.w, gun.h};
@@ -359,7 +389,7 @@ void handleShooting(Player &player, std::vector<Projectile> &projectiles,
     gun->cooldown -= dt;
   }
 
-  if (IsKeyDown(KEY_J) && gun->ammo > 0 && gun->cooldown <= 0.0f) {
+  if (isActionDown(player.controls, player.controls.fire) && gun->ammo > 0 && gun->cooldown <= 0.0f) {
     gun->cooldown = 1.0f / gun->fire_rate;
     gun->ammo--;
 
@@ -418,14 +448,12 @@ Gun spawnRandomGun(GameMap const &map, int screenWidth, int screenHeight) {
                 }
             }
         }
-
         if (!collision) {
             gun.x = (float)x;
             gun.y = (float)y;
             break;
         }
     }
-
     return gun;
 }
 
@@ -466,21 +494,30 @@ void renderProjectiles(std::vector<Projectile> const &projectiles) {
 }
 
 void renderToScreen(RenderTexture2D renderTarget) {
-  ClearBackground(RAYWHITE);
-  DrawTexturePro(
-      renderTarget.texture,
-      Rectangle{0, 0, (float)renderTarget.texture.width,
-                -(float)renderTarget.texture.height},
-      Rectangle{0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()},
-      Vector2{0, 0}, 0.0f, WHITE);
+  ClearBackground(BLACK);
+
+  float scale = std::min(
+      (float)GetScreenWidth() / RES_W,
+      (float)GetScreenHeight() / RES_H
+  );
+
+  float scaledWidth  = RES_W * scale;
+  float scaledHeight = RES_H * scale;
+  float offsetX = (GetScreenWidth() - scaledWidth) / 2;
+  float offsetY = (GetScreenHeight() - scaledHeight) / 2;
+
+  Rectangle src = {0, 0, (float)renderTarget.texture.width, -(float)renderTarget.texture.height};
+  Rectangle dst = {offsetX, offsetY, scaledWidth, scaledHeight};
+
+  DrawTexturePro(renderTarget.texture, src, dst, {0, 0}, 0.0f, WHITE);
 }
 
 Player initPlayer() {
   Player player = {};
   player.x = 10.0f;
   player.y = 10.0f;
-  player.w = 80.0f;
-  player.h = 200.0f;
+  player.w = 75.0f;
+  player.h = 100.0f;
   player.original_h = player.h;
   player.dx = 0.0f;
   player.dy = 0.0f;
@@ -507,8 +544,10 @@ Player initPlayer() {
   return player;
 }
 
+
 void init_resources(){
 	testDudeTex = LoadTexture("resources/dude75x100.png");
+	testBoxBunny = LoadTexture("resources/boxRabbit40x100.png");
 }
 
 
@@ -520,32 +559,50 @@ int main() {
 	
 	init_resources();
 
-  int const res_w = 1920;
-  int const res_h = 1080;
-  RenderTexture2D renderTarget = LoadRenderTexture(res_w, res_h);
+  RenderTexture2D renderTarget = LoadRenderTexture(RES_W, RES_H);
 	
-  Player player1 = initPlayer();
   std::vector<Gun> guns;
   std::vector<Projectile> projectiles;
+  
+	Player player0 = initPlayer();
+	Controls keyboard0 = {
+    -1,             
+    KEY_A, KEY_D,   
+    KEY_W, KEY_S,   
+    KEY_SPACE,      
+    KEY_LEFT_SHIFT, 
+    KEY_J           
+	};
+	Controls gamepad0 = {
+	    0,  
+	    GAMEPAD_BUTTON_LEFT_FACE_LEFT,
+	    GAMEPAD_BUTTON_LEFT_FACE_RIGHT,
+	    GAMEPAD_BUTTON_LEFT_FACE_UP,
+	    GAMEPAD_BUTTON_LEFT_FACE_DOWN,
+	    GAMEPAD_BUTTON_RIGHT_FACE_DOWN, 
+	    GAMEPAD_BUTTON_RIGHT_FACE_RIGHT,
+	    GAMEPAD_BUTTON_RIGHT_TRIGGER_1  
+	};
+	player0.controls = keyboard0;
 
 	for (int i = 0; i < 3; i++) {
-	    guns.push_back(spawnRandomGun(testMap, res_w, res_h));
+	    guns.push_back(spawnRandomGun(testMap, RES_W, RES_H));
 	}
 
 
   while (!WindowShouldClose()) {
     float dt = GetFrameTime();
-    handlePlayerInput(player1, dt);
-    handlePlayerCollision(player1, testMap, dt);
-    handleGunPickups(player1, guns);
-    handleShooting(player1, projectiles, dt);
+    handlePlayerInput(player0, dt);
+    handlePlayerCollision(player0, testMap, dt);
+    handleGunPickups(player0, guns);
+    handleShooting(player0, projectiles, dt);
     updateProjectiles(projectiles, dt, testMap);
 
     BeginTextureMode(renderTarget);
     ClearBackground(BLACK);
     BeginDrawing();
     renderLevel(testMap);
-    renderPlayer(player1);
+    renderPlayer(player0);
     renderGuns(guns);
     renderProjectiles(projectiles);
     EndDrawing();
