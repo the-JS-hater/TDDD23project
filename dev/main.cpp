@@ -1,5 +1,6 @@
 #include "raylib.h"
 #include "stdio.h"
+#include "float.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -7,6 +8,7 @@
 
 Texture testDudeTex;
 Texture testBoxBunny; 
+Texture woodBoxTex; 
 
 int const RES_W = 1920;
 int const RES_H = 1080;
@@ -30,11 +32,11 @@ GameMap testMap = {
     {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
     {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
     {VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID},
     {TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
     {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID, VOID},
     {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
     {TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE},
 };
@@ -68,6 +70,7 @@ struct Projectile {
   float dx, dy;
   float traveled = 0.0f;
   float max_distance;
+	std::vector<Vector2> trail;
 };
 
 struct Controls {
@@ -124,13 +127,26 @@ bool isActionReleased(Controls const &c, int action) {
     }
 }
 
+Vector2 LerpVec2(Vector2 a, Vector2 b, float t) {
+    return {
+        a.x + (b.x - a.x) * t,
+        a.y + (b.y - a.y) * t
+    };
+}
+
 void renderLevel(GameMap const &map) {
-  for (unsigned y = 0; y < map.size(); ++y) {
-    for (unsigned x = 0; x < map[y].size(); ++x) {
-      if (map[y][x] == TILE)
-        DrawRectangle(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE, RED);
+    for (unsigned y = 0; y < map.size(); ++y) {
+        for (unsigned x = 0; x < map[y].size(); ++x) {
+            if (map[y][x] == TILE) {
+                DrawTexture(
+                    woodBoxTex,
+                    x * TILE_SIZE,
+                    y * TILE_SIZE,
+                    WHITE
+                );
+            }
+        }
     }
-  }
 }
 
 void renderPlayer(Player const &player) {
@@ -155,42 +171,56 @@ void renderPlayer(Player const &player) {
     Vector2 origin = {0.0f, 0.0f};
 
     DrawTexturePro(testBoxBunny, src, dst, origin, 0.0f, WHITE);
-		
-		float shoulderY = player.y + player.h * 0.30;
-    float shoulderX = (player.facing < 0) ? player.x + player.w : player.x;
+			
+	float shoulderY = player.y + player.h * 0.50;  
+	float shoulderX = (player.facing == 1) 
+    ? player.x + player.w * 0.0f   
+    : player.x + player.w * 1.0f;  
+	
+	float armThickness = player.w * 0.25;        
+	float armLength    = player.h * 0.45f;       
+	
+	if (!player.gun) {
+	    Rectangle arm = {
+	        shoulderX - armThickness * 0.5f,  
+	        shoulderY,
+	        armThickness,
+	        armLength
+	    };
+	    DrawRectangleRec(arm, WHITE);
+	} else {
+    Gun const *gun = player.gun;
 
-    float armThickness = player.w * 0.50;       
-    float armLength    = player.h * 0.30;       
+    float gunScale = player.h / 100.0f; 
+    float gunW = gun->w * gunScale;
+    float gunH = gun->h * gunScale;
 
-    if (!player.gun) {
-        Rectangle arm = {
-            shoulderX - armThickness * 0.5f,
-            shoulderY,
-            armThickness,
-            armLength
-        };
+    float armX, armY;
+    if (player.facing == 1) {
+        armX = shoulderX;
+        armY = shoulderY - armThickness * 0.5f;
+
+        Rectangle arm = {armX, armY, armLength, armThickness};
         DrawRectangleRec(arm, WHITE);
-    } else {
-        float armX = (player.facing == 1) ? shoulderX : shoulderX - armLength;
-        Rectangle arm = {
-            armX,
-            shoulderY - armThickness * 0.5f,
-            armLength,
-            armThickness
-        };
-        DrawRectangleRec(arm, WHITE);
 
-        Gun const *gun = player.gun;
-        float gunScale = player.h / 100.0f; 
-        float gunW = gun->w * gunScale;
-        float gunH = gun->h * gunScale;
-
-        float gunX = (player.facing == 1) ? arm.x + arm.width : arm.x - gunW;
+        float gunX = arm.x + arm.width;
         float gunY = arm.y + arm.height/2.0f - gunH/2.0f;
+        Rectangle gunRect = {gunX, gunY, gunW, gunH};
+        DrawRectangleRec(gunRect, BLACK);
 
+    } else {
+        armX = shoulderX - armLength;
+        armY = shoulderY - armThickness * 0.5f;
+
+        Rectangle arm = {armX, armY, armLength, armThickness};
+        DrawRectangleRec(arm, WHITE);
+
+        float gunX = arm.x - gunW;
+        float gunY = arm.y + arm.height/2.0f - gunH/2.0f;
         Rectangle gunRect = {gunX, gunY, gunW, gunH};
         DrawRectangleRec(gunRect, BLACK);
     }
+	}
 }
 
 
@@ -399,19 +429,39 @@ void handleShooting(Player &player, std::vector<Projectile> &projectiles,
   if (isActionDown(player.controls, player.controls.fire) && gun->ammo > 0 && gun->cooldown <= 0.0f) {
     gun->cooldown = 1.0f / gun->fire_rate;
     gun->ammo--;
+			
 
-    float baseAngle = (player.facing == -1) ? M_PI : 0.0f;
-    float speed_factor = std::min(1.0f, std::fabs(player.dx) / player.max_vel);
-    float spread_angle = gun->spread * (1.0f + speed_factor * 2.0f);
-
-    float angle =
-        baseAngle + ((rand() / (float)RAND_MAX) - 0.5f) * spread_angle;
-
-    float vx = cosf(angle) * gun->projectile_speed;
+		float baseAngle = (player.facing == -1) ? M_PI : 0.0f;
+		float speed_factor = std::min(1.0f, std::fabs(player.dx) / player.max_vel);
+		float jump_factor = hasFlag(player.status_flags, GROUNDED) ? 0.0f : 2.5f;
+		float spread_angle = gun->spread * (1.0f + speed_factor + jump_factor);
+		float angle = baseAngle + ((rand() / (float)RAND_MAX) - 0.5f) * spread_angle;
+    
+		float vx = cosf(angle) * gun->projectile_speed;
     float vy = sinf(angle) * gun->projectile_speed;
-
-    projectiles.push_back({player.x + player.w, player.y + (int)(player.h * 0.30), vx,
-                           vy, 0.0f, gun->range});
+	
+		float shoulderY = player.y + player.h * 0.30f;
+		float shoulderX = (player.facing == 1) 
+		    ? player.x + player.w   
+		    : player.x;             
+		
+		float projX = shoulderX;
+		float projY = shoulderY;
+		
+		if (player.facing == 1) {
+		    projX += 5.0f;  
+		} else {
+		    projX -= 5.0f;  
+		}
+		
+		projectiles.push_back({
+		    projX,
+		    projY,
+		    vx,
+		    vy,
+		    0.0f,
+		    gun->range
+		});
   }
 }
 
@@ -473,6 +523,11 @@ void updateProjectiles(std::vector<Projectile> &projectiles, float dt,
     float move_y = p.dy * dt;
     p.x += move_x;
     p.y += move_y;
+		p.trail.push_back({p.x, p.y});
+		int const max_trail = 30;
+		if (p.trail.size() > max_trail) { 
+		    p.trail.erase(p.trail.begin());
+		}
     p.traveled += sqrtf(move_x * move_x + move_y * move_y);
 
     Rectangle rect = {p.x, p.y, 8, 8};
@@ -515,9 +570,13 @@ void renderGuns(std::vector<Gun> const &guns) {
 
 
 void renderProjectiles(std::vector<Projectile> const &projectiles) {
-  for (auto const &p : projectiles) {
-    DrawRectangle((int)p.x, (int)p.y, 8, 8, YELLOW);
-  }
+	for (auto const &p : projectiles) {
+	    for (size_t i = 0; i < p.trail.size(); i++) {
+	        float alpha = (i + 1) / (float)p.trail.size();
+	        DrawCircleV(p.trail[i], 3, Fade(YELLOW, alpha));
+	    }
+	    DrawCircleV({p.x, p.y}, 4, ORANGE);
+	}
 }
 
 
@@ -580,6 +639,7 @@ Player initPlayer() {
 void init_resources(){
 	testDudeTex = LoadTexture("resources/dude75x100.png");
 	testBoxBunny = LoadTexture("resources/boxRabbit40x100.png");
+	woodBoxTex = LoadTexture("resources/woodBox64x64.png");
 }
 
 
@@ -591,7 +651,12 @@ int main() {
 	
 	init_resources();
 
-  RenderTexture2D renderTarget = LoadRenderTexture(RES_W, RES_H);
+	Camera2D camera = {0};
+	camera.target = {RES_W/2.0f, RES_H/2.0f};
+	camera.offset = {(float)RES_W/2, (float)RES_H/2}; // screen center
+	camera.zoom = 1.0f;
+  
+	RenderTexture2D renderTarget = LoadRenderTexture(RES_W, RES_H);
 	
   std::vector<Gun> guns;
   std::vector<Projectile> projectiles;
@@ -633,17 +698,60 @@ int main() {
     	handleShooting(player, projectiles, dt);
 		}
 		updateProjectiles(projectiles, dt, testMap, players);
+		
+    Vector2 avgPos = {0, 0};
+    float minX = FLT_MAX, minY = FLT_MAX, maxX = -FLT_MAX, maxY = -FLT_MAX;
+    int aliveCount = 0;
+
+    for (auto &pl : players) {
+        if (!hasFlag(pl.status_flags, ALIVE)) continue;
+        aliveCount++;
+        avgPos.x += pl.x + pl.w * 0.5f;
+        avgPos.y += pl.y + pl.h * 0.5f;
+        minX = std::min(minX, pl.x);
+        minY = std::min(minY, pl.y);
+        maxX = std::max(maxX, pl.x + pl.w);
+        maxY = std::max(maxY, pl.y + pl.h);
+    }
+
+    if (aliveCount > 0) {
+        avgPos.x /= (float)aliveCount;
+        avgPos.y /= (float)aliveCount;
+
+        camera.target = LerpVec2(camera.target, avgPos, 0.10f);
+
+        float pad = 200.0f;
+        float viewW = (maxX - minX) + pad;
+        float viewH = (maxY - minY) + pad;
+
+        viewW = std::max(viewW, 1.0f);
+        viewH = std::max(viewH, 1.0f);
+
+        float zoomX = (float)RES_W / viewW;
+        float zoomY = (float)RES_H / viewH;
+				
+				float const zoom_factor = 0.50f;
+        float desiredZoom = std::min(zoomX, zoomY) * zoom_factor;
+        desiredZoom = std::clamp(desiredZoom, 0.25f, 2.0f); 
+
+        camera.zoom = camera.zoom + (desiredZoom - camera.zoom) * 0.05f;
+    }
 
     BeginTextureMode(renderTarget);
-    ClearBackground(BLACK);
+    ClearBackground(SKYBLUE);
+
     BeginDrawing();
+    BeginMode2D(camera);
+
     renderLevel(testMap);
-		for (Player &player: players) {
-    	if (!hasFlag(player.status_flags, ALIVE)) { continue; };
-			renderPlayer(player);
-		}
+    for (Player &player: players) {
+        if (!hasFlag(player.status_flags, ALIVE)) continue;
+        renderPlayer(player);
+    }
     renderGuns(guns);
     renderProjectiles(projectiles);
+
+    EndMode2D();
     EndDrawing();
     EndTextureMode();
 
