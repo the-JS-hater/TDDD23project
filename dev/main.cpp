@@ -70,6 +70,7 @@ struct Projectile {
   float dx, dy;
   float traveled = 0.0f;
   float max_distance;
+	int ownerId;
 	std::vector<Vector2> trail;
 };
 
@@ -94,9 +95,12 @@ struct Player {
 
 	int health;
   int max_health;
+	int id;
 
   Gun *gun = nullptr;
-
+	int kills = 0;
+  float hitTimer = 0.0f;
+	float respawnTimer = 0.0f;
   int facing;
   uint32_t status_flags;
 
@@ -220,6 +224,9 @@ void renderPlayer(Player const &player) {
         Rectangle gunRect = {gunX, gunY, gunW, gunH};
         DrawRectangleRec(gunRect, BLACK);
     }
+	}
+	if (player.hitTimer > 0.0f) {
+	    DrawRectangle(player.x, player.y, player.w, player.h, Fade(RED, 0.5f));
 	}
 }
 
@@ -460,7 +467,8 @@ void handleShooting(Player &player, std::vector<Projectile> &projectiles,
 		    vx,
 		    vy,
 		    0.0f,
-		    gun->range
+		    gun->range,
+				player.id
 		});
   }
 }
@@ -542,10 +550,13 @@ void updateProjectiles(std::vector<Projectile> &projectiles, float dt,
 
         Rectangle prect = {pl.x, pl.y, pl.w, pl.h};
         if (CheckCollisionRecs(rect, prect)) {
-          pl.health -= 25; 
+          pl.health -= 25;
+					pl.hitTimer = 0.2f;
           if (pl.health <= 0) {
 						clearFlag(pl.status_flags, ALIVE);
-          }
+						pl.respawnTimer = 3.0f;
+						players[p.ownerId].kills++;
+					}
           remove = true;
           break;
         }
@@ -660,6 +671,7 @@ int main() {
 	
   std::vector<Gun> guns;
   std::vector<Projectile> projectiles;
+	float gunSpawnTimer = 0.0f;
   
   Player player0 = initPlayer();
   player0.controls = {
@@ -683,6 +695,8 @@ int main() {
       GAMEPAD_BUTTON_RIGHT_TRIGGER_1   
   };
 	std::vector<Player> players{player0, player1};
+	player0.id = 0;
+	player1.id = 1;
 
 	for (int i = 0; i < 3; i++) {
 	    guns.push_back(spawnRandomGun(testMap, RES_W, RES_H));
@@ -713,7 +727,6 @@ int main() {
         maxX = std::max(maxX, pl.x + pl.w);
         maxY = std::max(maxY, pl.y + pl.h);
     }
-
     if (aliveCount > 0) {
         avgPos.x /= (float)aliveCount;
         avgPos.y /= (float)aliveCount;
@@ -737,6 +750,23 @@ int main() {
         camera.zoom = camera.zoom + (desiredZoom - camera.zoom) * 0.05f;
     }
 
+		gunSpawnTimer -= dt;
+		if (gunSpawnTimer <= 0.0f) {
+		    guns.push_back(spawnRandomGun(testMap, RES_W, RES_H));
+		    gunSpawnTimer = 10.0f; 
+		}
+		for (Player &pl : players) {
+    	if (pl.hitTimer > 0.0f) pl.hitTimer -= dt;
+		  if (!hasFlag(pl.status_flags, ALIVE)) {
+		      pl.respawnTimer -= dt;
+		      if (pl.respawnTimer <= 0.0f) {
+		          // Respawn at random position
+		          pl = initPlayer(); 
+		          pl.controls = pl.controls; // restore controls
+		      }
+		  }
+		}
+
     BeginTextureMode(renderTarget);
     ClearBackground(SKYBLUE);
 
@@ -755,6 +785,11 @@ int main() {
     EndDrawing();
     EndTextureMode();
 
+		int y = 10;
+		for (int i = 0; i < players.size(); i++) {
+		    DrawText(TextFormat("P%d Kills: %d", i, players[i].kills), 10, y, 20, WHITE);
+		    y += 25;
+		}
     renderToScreen(renderTarget);
   }
   UnloadRenderTexture(renderTarget);
