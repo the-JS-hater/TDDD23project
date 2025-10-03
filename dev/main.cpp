@@ -1,14 +1,14 @@
+#include "float.h"
 #include "raylib.h"
 #include "stdio.h"
-#include "float.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <vector>
 
 Texture testDudeTex;
-Texture testBoxBunny; 
-Texture woodBoxTex; 
+Texture testBoxBunny;
+Texture woodBoxTex;
 
 int const RES_W = 1920;
 int const RES_H = 1080;
@@ -22,32 +22,66 @@ using GameMap = std::vector<std::vector<Tile>>;
 
 int const TILE_SIZE = 64;
 GameMap testMap = {
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, TILE, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID},
-    {TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID, VOID},
-    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
-    {TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, TILE, TILE, TILE, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE,
+     TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID},
+    {TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE,
+     TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, TILE, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID,
+     VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE,
+     TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE,
+     TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE},
 };
 
 enum PlayerState {
-  GROUNDED 	= 1 << 0,
-  JUMPING 	= 1 << 1,
-  SLIDING 	= 1 << 2,
-  DASHING 	= 1 << 3,
-  DUCKING 	= 1 << 4,
-  ALIVE 		= 1 << 5,
+  GROUNDED = 1 << 0,
+  JUMPING = 1 << 1,
+  SLIDING = 1 << 2,
+  DASHING = 1 << 3,
+  DUCKING = 1 << 4,
+  ALIVE = 1 << 5,
 };
 
 bool hasFlag(uint32_t flags, PlayerState s) { return (flags & s) != 0; }
@@ -70,13 +104,13 @@ struct Projectile {
   float dx, dy;
   float traveled = 0.0f;
   float max_distance;
-	int ownerId;
-	std::vector<Vector2> trail;
+  int ownerId;
+  std::vector<Vector2> trail;
 };
 
 struct Controls {
-    int deviceId; 
-    int left, right, up, down, jump, dash, fire;
+  int deviceId;
+  int left, right, up, down, jump, dash, fire;
 };
 
 struct Player {
@@ -93,143 +127,120 @@ struct Player {
   float slide_duration;
   float duck_scale;
 
-	int health;
+  int health;
   int max_health;
-	int id;
+  int id;
 
   Gun *gun = nullptr;
-	int kills = 0;
+  int kills = 0;
   float hitTimer = 0.0f;
-	float respawnTimer = 0.0f;
+  float respawnTimer = 0.0f;
   int facing;
   uint32_t status_flags;
 
-	Controls controls;
+  Controls controls;
 };
 
 bool isActionDown(Controls const &c, int action) {
-    if (c.deviceId == -1) {
-        return IsKeyDown(action);
-    } else {
-        return IsGamepadButtonDown(c.deviceId, action);
-    }
+  if (c.deviceId == -1) {
+    return IsKeyDown(action);
+  } else {
+    return IsGamepadButtonDown(c.deviceId, action);
+  }
 }
 
 bool isActionPressed(Controls const &c, int action) {
-    if (c.deviceId == -1) {
-        return IsKeyPressed(action);
-    } else {
-        return IsGamepadButtonPressed(c.deviceId, action);
-    }
+  if (c.deviceId == -1) {
+    return IsKeyPressed(action);
+  } else {
+    return IsGamepadButtonPressed(c.deviceId, action);
+  }
 }
 
 bool isActionReleased(Controls const &c, int action) {
-    if (c.deviceId == -1) {
-        return IsKeyReleased(action);
-    } else {
-        return IsGamepadButtonReleased(c.deviceId, action);
-    }
+  if (c.deviceId == -1) {
+    return IsKeyReleased(action);
+  } else {
+    return IsGamepadButtonReleased(c.deviceId, action);
+  }
 }
 
 Vector2 LerpVec2(Vector2 a, Vector2 b, float t) {
-    return {
-        a.x + (b.x - a.x) * t,
-        a.y + (b.y - a.y) * t
-    };
+  return {a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t};
 }
 
 void renderLevel(GameMap const &map) {
-    for (unsigned y = 0; y < map.size(); ++y) {
-        for (unsigned x = 0; x < map[y].size(); ++x) {
-            if (map[y][x] == TILE) {
-                DrawTexture(
-                    woodBoxTex,
-                    x * TILE_SIZE,
-                    y * TILE_SIZE,
-                    WHITE
-                );
-            }
-        }
+  for (unsigned y = 0; y < map.size(); ++y) {
+    for (unsigned x = 0; x < map[y].size(); ++x) {
+      if (map[y][x] == TILE) {
+        DrawTexture(woodBoxTex, x * TILE_SIZE, y * TILE_SIZE, WHITE);
+      }
     }
+  }
 }
 
 void renderPlayer(Player const &player) {
-    Rectangle src = {
-        0.0f, 
-        0.0f, 
-        (float)testBoxBunny.width, 
-        (float)testBoxBunny.height
-    };
+  Rectangle src = {0.0f, 0.0f, (float)testBoxBunny.width,
+                   (float)testBoxBunny.height};
 
-    Rectangle dst = {
-        player.x, 
-        player.y, 
-        player.w, 
-        player.h
-    };
-    
-		if (player.facing < 0) {
-        src.width = -src.width;
-    }
+  Rectangle dst = {player.x, player.y, player.w, player.h};
 
-    Vector2 origin = {0.0f, 0.0f};
+  if (player.facing < 0) {
+    src.width = -src.width;
+  }
 
-    DrawTexturePro(testBoxBunny, src, dst, origin, 0.0f, WHITE);
-			
-	float shoulderY = player.y + player.h * 0.50;  
-	float shoulderX = (player.facing == 1) 
-    ? player.x + player.w * 0.0f   
-    : player.x + player.w * 1.0f;  
-	
-	float armThickness = player.w * 0.25;        
-	float armLength    = player.h * 0.45f;       
-	
-	if (!player.gun) {
-	    Rectangle arm = {
-	        shoulderX - armThickness * 0.5f,  
-	        shoulderY,
-	        armThickness,
-	        armLength
-	    };
-	    DrawRectangleRec(arm, WHITE);
-	} else {
+  Vector2 origin = {0.0f, 0.0f};
+
+  DrawTexturePro(testBoxBunny, src, dst, origin, 0.0f, WHITE);
+
+  float shoulderY = player.y + player.h * 0.50;
+  float shoulderX = (player.facing == 1) ? player.x + player.w * 0.0f
+                                         : player.x + player.w * 1.0f;
+
+  float armThickness = player.w * 0.25;
+  float armLength = player.h * 0.45f;
+
+  if (!player.gun) {
+    Rectangle arm = {shoulderX - armThickness * 0.5f, shoulderY, armThickness,
+                     armLength};
+    DrawRectangleRec(arm, WHITE);
+  } else {
     Gun const *gun = player.gun;
 
-    float gunScale = player.h / 100.0f; 
+    float gunScale = player.h / 100.0f;
     float gunW = gun->w * gunScale;
     float gunH = gun->h * gunScale;
 
     float armX, armY;
     if (player.facing == 1) {
-        armX = shoulderX;
-        armY = shoulderY - armThickness * 0.5f;
+      armX = shoulderX;
+      armY = shoulderY - armThickness * 0.5f;
 
-        Rectangle arm = {armX, armY, armLength, armThickness};
-        DrawRectangleRec(arm, WHITE);
+      Rectangle arm = {armX, armY, armLength, armThickness};
+      DrawRectangleRec(arm, WHITE);
 
-        float gunX = arm.x + arm.width;
-        float gunY = arm.y + arm.height/2.0f - gunH/2.0f;
-        Rectangle gunRect = {gunX, gunY, gunW, gunH};
-        DrawRectangleRec(gunRect, BLACK);
+      float gunX = arm.x + arm.width;
+      float gunY = arm.y + arm.height / 2.0f - gunH / 2.0f;
+      Rectangle gunRect = {gunX, gunY, gunW, gunH};
+      DrawRectangleRec(gunRect, BLACK);
 
     } else {
-        armX = shoulderX - armLength;
-        armY = shoulderY - armThickness * 0.5f;
+      armX = shoulderX - armLength;
+      armY = shoulderY - armThickness * 0.5f;
 
-        Rectangle arm = {armX, armY, armLength, armThickness};
-        DrawRectangleRec(arm, WHITE);
+      Rectangle arm = {armX, armY, armLength, armThickness};
+      DrawRectangleRec(arm, WHITE);
 
-        float gunX = arm.x - gunW;
-        float gunY = arm.y + arm.height/2.0f - gunH/2.0f;
-        Rectangle gunRect = {gunX, gunY, gunW, gunH};
-        DrawRectangleRec(gunRect, BLACK);
+      float gunX = arm.x - gunW;
+      float gunY = arm.y + arm.height / 2.0f - gunH / 2.0f;
+      Rectangle gunRect = {gunX, gunY, gunW, gunH};
+      DrawRectangleRec(gunRect, BLACK);
     }
-	}
-	if (player.hitTimer > 0.0f) {
-	    DrawRectangle(player.x, player.y, player.w, player.h, Fade(RED, 0.5f));
-	}
+  }
+  if (player.hitTimer > 0.0f) {
+    DrawRectangle(player.x, player.y, player.w, player.h, Fade(RED, 0.5f));
+  }
 }
-
 
 bool hasMapCollision(GameMap const &map, Player const &player) {
   Rectangle rect = {player.x, player.y, player.w, player.h};
@@ -280,12 +291,11 @@ void handlePlayerCollision(Player &player, GameMap const &map, float const dt) {
   }
 }
 
-
 void handlePlayerInput(Player &player, float dt) {
-	bool left  = isActionDown(player.controls, player.controls.left);
-	bool right = isActionDown(player.controls, player.controls.right);
-  
-	float accel_mod = (hasFlag(player.status_flags, DUCKING) &&
+  bool left = isActionDown(player.controls, player.controls.left);
+  bool right = isActionDown(player.controls, player.controls.right);
+
+  float accel_mod = (hasFlag(player.status_flags, DUCKING) &&
                      hasFlag(player.status_flags, GROUNDED))
                         ? 0.2f
                         : 1.0f;
@@ -311,18 +321,21 @@ void handlePlayerInput(Player &player, float dt) {
 
   player.dx =
       std::clamp(player.dx, -player.max_vel, player.max_vel * accel_mod);
-	
-	if (isActionDown(player.controls, player.controls.jump) && hasFlag(player.status_flags, GROUNDED)) {
-	    player.dy = -player.jump_force;
-	    clearFlag(player.status_flags, GROUNDED);
-	    setFlag(player.status_flags, JUMPING);
-	}
 
-  if (isActionReleased(player.controls, player.controls.jump) && player.dy < -player.jump_force * 0.5f) {
-    player.dy *= 0.5f; 
+  if (isActionDown(player.controls, player.controls.jump) &&
+      hasFlag(player.status_flags, GROUNDED)) {
+    player.dy = -player.jump_force;
+    clearFlag(player.status_flags, GROUNDED);
+    setFlag(player.status_flags, JUMPING);
   }
 
-  if (isActionPressed(player.controls, player.controls.dash) && !hasFlag(player.status_flags, DASHING)) {
+  if (isActionReleased(player.controls, player.controls.jump) &&
+      player.dy < -player.jump_force * 0.5f) {
+    player.dy *= 0.5f;
+  }
+
+  if (isActionPressed(player.controls, player.controls.dash) &&
+      !hasFlag(player.status_flags, DASHING)) {
     setFlag(player.status_flags, DASHING);
     player.dash_timer = player.dash_duration;
 
@@ -344,7 +357,7 @@ void handlePlayerInput(Player &player, float dt) {
     }
   }
 
-  float const sliding_threshold = 20.0f;
+  float const sliding_threshold = 10.0f;
   if (isActionDown(player.controls, player.controls.down)) {
     if (hasFlag(player.status_flags, GROUNDED)) {
       if (!hasFlag(player.status_flags, SLIDING) &&
@@ -402,9 +415,9 @@ void handlePlayerInput(Player &player, float dt) {
 
 void handleGunPickups(Player &player, std::vector<Gun> &guns) {
   if (player.gun) {
-		return;
-	}
-	Rectangle playerRect = {player.x, player.y, player.w, player.h};
+    return;
+  }
+  Rectangle playerRect = {player.x, player.y, player.w, player.h};
   for (Gun &gun : guns) {
     if (!gun.picked_up) {
       Rectangle gunRect = {gun.x, gun.y, gun.w, gun.h};
@@ -424,104 +437,94 @@ void handleShooting(Player &player, std::vector<Projectile> &projectiles,
   }
 
   Gun *gun = player.gun;
-	if (gun->ammo <= 0) {
-		player.gun = nullptr;
-		return;
-	}
+  if (gun->ammo <= 0) {
+    player.gun = nullptr;
+    return;
+  }
 
   if (gun->cooldown > 0.0f) {
     gun->cooldown -= dt;
   }
 
-  if (isActionDown(player.controls, player.controls.fire) && gun->ammo > 0 && gun->cooldown <= 0.0f) {
+  if (isActionDown(player.controls, player.controls.fire) && gun->ammo > 0 &&
+      gun->cooldown <= 0.0f) {
     gun->cooldown = 1.0f / gun->fire_rate;
     gun->ammo--;
-			
 
-		float baseAngle = (player.facing == -1) ? M_PI : 0.0f;
-		float speed_factor = std::min(1.0f, std::fabs(player.dx) / player.max_vel);
-		float jump_factor = hasFlag(player.status_flags, GROUNDED) ? 0.0f : 2.5f;
-		float spread_angle = gun->spread * (1.0f + speed_factor + jump_factor);
-		float angle = baseAngle + ((rand() / (float)RAND_MAX) - 0.5f) * spread_angle;
-    
-		float vx = cosf(angle) * gun->projectile_speed;
+    float baseAngle = (player.facing == -1) ? M_PI : 0.0f;
+    float speed_factor = std::min(1.0f, std::fabs(player.dx) / player.max_vel);
+    float jump_factor = hasFlag(player.status_flags, GROUNDED) ? 0.0f : 2.5f;
+    float spread_angle = gun->spread * (1.0f + speed_factor + jump_factor);
+    float angle =
+        baseAngle + ((rand() / (float)RAND_MAX) - 0.5f) * spread_angle;
+
+    float vx = cosf(angle) * gun->projectile_speed;
     float vy = sinf(angle) * gun->projectile_speed;
-	
-		float shoulderY = player.y + player.h * 0.30f;
-		float shoulderX = (player.facing == 1) 
-		    ? player.x + player.w   
-		    : player.x;             
-		
-		float projX = shoulderX;
-		float projY = shoulderY;
-		
-		if (player.facing == 1) {
-		    projX += 5.0f;  
-		} else {
-		    projX -= 5.0f;  
-		}
-		
-		projectiles.push_back({
-		    projX,
-		    projY,
-		    vx,
-		    vy,
-		    0.0f,
-		    gun->range,
-				player.id
-		});
+
+    float shoulderY = player.y + player.h * 0.30f;
+    float shoulderX = (player.facing == 1) ? player.x + player.w : player.x;
+
+    float projX = shoulderX;
+    float projY = shoulderY;
+
+    if (player.facing == 1) {
+      projX += 5.0f;
+    } else {
+      projX -= 5.0f;
+    }
+
+    projectiles.push_back({projX, projY, vx, vy, 0.0f, gun->range, player.id});
   }
 }
 
 Gun spawnRandomGun(GameMap const &map, int screenWidth, int screenHeight) {
-    Gun gun = {};
-    gun.w = 60;
-    gun.h = 30;
-    gun.ammo = 30;
-    gun.fire_rate = 5.0f;
-    gun.projectile_speed = 800.0f;
-    gun.spread = 0.15f;
-    gun.range = 600.0f;
-    gun.picked_up = false;
-    gun.cooldown = 0.0f;
+  Gun gun = {};
+  gun.w = 60;
+  gun.h = 30;
+  gun.ammo = 30;
+  gun.fire_rate = 5.0f;
+  gun.projectile_speed = 800.0f;
+  gun.spread = 0.15f;
+  gun.range = 600.0f;
+  gun.picked_up = false;
+  gun.cooldown = 0.0f;
 
-    while (true) {
-        int x = GetRandomValue(0, screenWidth - gun.w);
-        int y = GetRandomValue(0, screenHeight - gun.h);
+  while (true) {
+    int x = GetRandomValue(0, screenWidth - gun.w);
+    int y = GetRandomValue(0, screenHeight - gun.h);
 
-        Rectangle rect = {(float)x, (float)y, gun.w, gun.h};
+    Rectangle rect = {(float)x, (float)y, gun.w, gun.h};
 
-        bool collision = false;
-        int rows = (int)map.size();
-        int cols = map.empty() ? 0 : (int)map[0].size();
+    bool collision = false;
+    int rows = (int)map.size();
+    int cols = map.empty() ? 0 : (int)map[0].size();
 
-        int left = std::max(0, (int)std::floor(rect.x / TILE_SIZE));
-        int right =
-            std::min(cols - 1, (int)std::floor((rect.x + rect.width) / TILE_SIZE));
-        int top = std::max(0, (int)std::floor(rect.y / TILE_SIZE));
-        int bottom =
-            std::min(rows - 1, (int)std::floor((rect.y + rect.height) / TILE_SIZE));
+    int left = std::max(0, (int)std::floor(rect.x / TILE_SIZE));
+    int right =
+        std::min(cols - 1, (int)std::floor((rect.x + rect.width) / TILE_SIZE));
+    int top = std::max(0, (int)std::floor(rect.y / TILE_SIZE));
+    int bottom =
+        std::min(rows - 1, (int)std::floor((rect.y + rect.height) / TILE_SIZE));
 
-        for (int yy = top; yy <= bottom && !collision; ++yy) {
-            for (int xx = left; xx <= right && !collision; ++xx) {
-                if (map[yy][xx] == TILE) {
-                    Rectangle tile = {(float)xx * TILE_SIZE, (float)yy * TILE_SIZE,
-                                      (float)TILE_SIZE, (float)TILE_SIZE};
-                    if (CheckCollisionRecs(rect, tile)) {
-                        collision = true;
-                    }
-                }
-            }
+    for (int yy = top; yy <= bottom && !collision; ++yy) {
+      for (int xx = left; xx <= right && !collision; ++xx) {
+        if (map[yy][xx] == TILE) {
+          Rectangle tile = {(float)xx * TILE_SIZE, (float)yy * TILE_SIZE,
+                            (float)TILE_SIZE, (float)TILE_SIZE};
+          if (CheckCollisionRecs(rect, tile)) {
+            collision = true;
+          }
         }
-        if (!collision) {
-            gun.x = (float)x;
-            gun.y = (float)y;
-            break;
-        }
+      }
     }
-    return gun;
+    if (!collision) {
+      gun.x = (float)x;
+      gun.y = (float)y;
+      break;
+    }
+  }
+  return gun;
 }
-
 
 void updateProjectiles(std::vector<Projectile> &projectiles, float dt,
                        GameMap const &map, std::vector<Player> &players) {
@@ -531,32 +534,34 @@ void updateProjectiles(std::vector<Projectile> &projectiles, float dt,
     float move_y = p.dy * dt;
     p.x += move_x;
     p.y += move_y;
-		p.trail.push_back({p.x, p.y});
-		int const max_trail = 30;
-		if (p.trail.size() > max_trail) { 
-		    p.trail.erase(p.trail.begin());
-		}
+    p.trail.push_back({p.x, p.y});
+    int const max_trail = 30;
+    if (p.trail.size() > max_trail) {
+      p.trail.erase(p.trail.begin());
+    }
     p.traveled += sqrtf(move_x * move_x + move_y * move_y);
 
     Rectangle rect = {p.x, p.y, 8, 8};
 
     bool remove = false;
 
-    if (p.traveled >= p.max_distance || hasMapCollision(map, *(Player *)&rect)) {
+    if (p.traveled >= p.max_distance ||
+        hasMapCollision(map, *(Player *)&rect)) {
       remove = true;
     } else {
       for (auto &pl : players) {
-        if (!(hasFlag(pl.status_flags, ALIVE))) continue;
+        if (!(hasFlag(pl.status_flags, ALIVE)))
+          continue;
 
         Rectangle prect = {pl.x, pl.y, pl.w, pl.h};
         if (CheckCollisionRecs(rect, prect)) {
           pl.health -= 25;
-					pl.hitTimer = 0.2f;
+          pl.hitTimer = 0.2f;
           if (pl.health <= 0) {
-						clearFlag(pl.status_flags, ALIVE);
-						pl.respawnTimer = 3.0f;
-						players[p.ownerId].kills++;
-					}
+            clearFlag(pl.status_flags, ALIVE);
+            pl.respawnTimer = 3.0f;
+            players[p.ownerId].kills++;
+          }
           remove = true;
           break;
         }
@@ -579,32 +584,29 @@ void renderGuns(std::vector<Gun> const &guns) {
   }
 }
 
-
 void renderProjectiles(std::vector<Projectile> const &projectiles) {
-	for (auto const &p : projectiles) {
-	    for (size_t i = 0; i < p.trail.size(); i++) {
-	        float alpha = (i + 1) / (float)p.trail.size();
-	        DrawCircleV(p.trail[i], 3, Fade(YELLOW, alpha));
-	    }
-	    DrawCircleV({p.x, p.y}, 4, ORANGE);
-	}
+  for (auto const &p : projectiles) {
+    for (size_t i = 0; i < p.trail.size(); i++) {
+      float alpha = (i + 1) / (float)p.trail.size();
+      DrawCircleV(p.trail[i], 3, Fade(YELLOW, alpha));
+    }
+    DrawCircleV({p.x, p.y}, 4, ORANGE);
+  }
 }
-
 
 void renderToScreen(RenderTexture2D renderTarget) {
   ClearBackground(BLACK);
 
-  float scale = std::min(
-      (float)GetScreenWidth() / RES_W,
-      (float)GetScreenHeight() / RES_H
-  );
+  float scale = std::min((float)GetScreenWidth() / RES_W,
+                         (float)GetScreenHeight() / RES_H);
 
-  float scaledWidth  = RES_W * scale;
+  float scaledWidth = RES_W * scale;
   float scaledHeight = RES_H * scale;
   float offsetX = (GetScreenWidth() - scaledWidth) / 2;
   float offsetY = (GetScreenHeight() - scaledHeight) / 2;
 
-  Rectangle src = {0, 0, (float)renderTarget.texture.width, -(float)renderTarget.texture.height};
+  Rectangle src = {0, 0, (float)renderTarget.texture.width,
+                   -(float)renderTarget.texture.height};
   Rectangle dst = {offsetX, offsetY, scaledWidth, scaledHeight};
 
   DrawTexturePro(renderTarget.texture, src, dst, {0, 0}, 0.0f, WHITE);
@@ -629,7 +631,7 @@ Player initPlayer() {
   player.dash_speed = 3000.0f;
   player.dash_duration = 1.00;
   player.slide_duration = 0.5f;
-  player.duck_scale = 0.3f;
+  player.duck_scale = 0.4f;
 
   player.dash_timer = 0.0f;
   player.slide_timer = 0.0f;
@@ -638,134 +640,126 @@ Player initPlayer() {
 
   player.status_flags = 0;
   setFlag(player.status_flags, GROUNDED);
-	
-	player.max_health = 100;
-	player.health = player.max_health;
+
+  player.max_health = 100;
+  player.health = player.max_health;
   setFlag(player.status_flags, ALIVE);
 
   return player;
 }
 
-
-void init_resources(){
-	testDudeTex = LoadTexture("resources/dude75x100.png");
-	testBoxBunny = LoadTexture("resources/boxRabbit40x100.png");
-	woodBoxTex = LoadTexture("resources/woodBox64x64.png");
+void init_resources() {
+  testDudeTex = LoadTexture("resources/dude75x100.png");
+  testBoxBunny = LoadTexture("resources/boxRabbit40x100.png");
+  woodBoxTex = LoadTexture("resources/woodBox64x64.png");
 }
-
 
 int main() {
   SetTraceLogLevel(LOG_WARNING);
-  InitWindow(1080, 720, "Game");
+  InitWindow(1440, 920, "Game");
   SetTargetFPS(60);
   HideCursor();
-	
-	init_resources();
 
-	Camera2D camera = {0};
-	camera.target = {RES_W/2.0f, RES_H/2.0f};
-	camera.offset = {(float)RES_W/2, (float)RES_H/2}; // screen center
-	camera.zoom = 1.0f;
-  
-	RenderTexture2D renderTarget = LoadRenderTexture(RES_W, RES_H);
-	
+  init_resources();
+
+  Camera2D camera = {0};
+  camera.target = {RES_W / 2.0f, RES_H / 2.0f};
+  camera.offset = {(float)RES_W / 2, (float)RES_H / 2};
+  camera.zoom = 1.0f;
+
+  RenderTexture2D renderTarget = LoadRenderTexture(RES_W, RES_H);
+
   std::vector<Gun> guns;
   std::vector<Projectile> projectiles;
-	float gunSpawnTimer = 0.0f;
-  
-  Player player0 = initPlayer();
-  player0.controls = {
-      -1,             
-      KEY_A, KEY_D,   
-      KEY_W, KEY_S,   
-      KEY_SPACE,      
-      KEY_LEFT_SHIFT, 
-      KEY_J           
-  };
-  Player player1 = initPlayer();
-  player1.x = 500.0f;  
-  player1.controls = {
-      0,  
-      GAMEPAD_BUTTON_LEFT_FACE_LEFT,
-      GAMEPAD_BUTTON_LEFT_FACE_RIGHT,
-      GAMEPAD_BUTTON_LEFT_FACE_UP,
-      GAMEPAD_BUTTON_LEFT_FACE_DOWN,
-      GAMEPAD_BUTTON_RIGHT_FACE_DOWN,  
-      GAMEPAD_BUTTON_RIGHT_FACE_RIGHT, 
-      GAMEPAD_BUTTON_RIGHT_TRIGGER_1   
-  };
-	std::vector<Player> players{player0, player1};
-	player0.id = 0;
-	player1.id = 1;
+  float gunSpawnTimer = 0.0f;
 
-	for (int i = 0; i < 3; i++) {
-	    guns.push_back(spawnRandomGun(testMap, RES_W, RES_H));
-	}
+  Player player0 = initPlayer();
+  player0.controls = {-1,    KEY_A,     KEY_D,          KEY_W,
+                      KEY_S, KEY_SPACE, KEY_LEFT_SHIFT, KEY_J};
+  Player player1 = initPlayer();
+  player1.x = 500.0f;
+  player1.controls = {0,
+                      GAMEPAD_BUTTON_LEFT_FACE_LEFT,
+                      GAMEPAD_BUTTON_LEFT_FACE_RIGHT,
+                      GAMEPAD_BUTTON_LEFT_FACE_UP,
+                      GAMEPAD_BUTTON_LEFT_FACE_DOWN,
+                      GAMEPAD_BUTTON_RIGHT_FACE_DOWN,
+                      GAMEPAD_BUTTON_RIGHT_FACE_RIGHT,
+                      GAMEPAD_BUTTON_RIGHT_TRIGGER_1};
+  std::vector<Player> players{player0, player1};
+  player0.id = 0;
+  player1.id = 1;
+
+  for (int i = 0; i < 3; i++) {
+    guns.push_back(spawnRandomGun(testMap, RES_W, RES_H));
+  }
 
   while (!WindowShouldClose()) {
     float dt = GetFrameTime();
-   	
-		for (Player &player: players) {
-			handlePlayerInput(player, dt);
-    	handlePlayerCollision(player, testMap, dt);
-    	handleGunPickups(player, guns);
-    	handleShooting(player, projectiles, dt);
-		}
-		updateProjectiles(projectiles, dt, testMap, players);
-		
+
+    for (Player &player : players) {
+      handlePlayerInput(player, dt);
+      handlePlayerCollision(player, testMap, dt);
+      handleGunPickups(player, guns);
+      handleShooting(player, projectiles, dt);
+    }
+    updateProjectiles(projectiles, dt, testMap, players);
+
     Vector2 avgPos = {0, 0};
     float minX = FLT_MAX, minY = FLT_MAX, maxX = -FLT_MAX, maxY = -FLT_MAX;
     int aliveCount = 0;
 
     for (auto &pl : players) {
-        if (!hasFlag(pl.status_flags, ALIVE)) continue;
-        aliveCount++;
-        avgPos.x += pl.x + pl.w * 0.5f;
-        avgPos.y += pl.y + pl.h * 0.5f;
-        minX = std::min(minX, pl.x);
-        minY = std::min(minY, pl.y);
-        maxX = std::max(maxX, pl.x + pl.w);
-        maxY = std::max(maxY, pl.y + pl.h);
+      if (!hasFlag(pl.status_flags, ALIVE))
+        continue;
+      aliveCount++;
+      avgPos.x += pl.x + pl.w * 0.5f;
+      avgPos.y += pl.y + pl.h * 0.5f;
+      minX = std::min(minX, pl.x);
+      minY = std::min(minY, pl.y);
+      maxX = std::max(maxX, pl.x + pl.w);
+      maxY = std::max(maxY, pl.y + pl.h);
     }
     if (aliveCount > 0) {
-        avgPos.x /= (float)aliveCount;
-        avgPos.y /= (float)aliveCount;
+      avgPos.x /= (float)aliveCount;
+      avgPos.y /= (float)aliveCount;
 
-        camera.target = LerpVec2(camera.target, avgPos, 0.10f);
+      camera.target = LerpVec2(camera.target, avgPos, 0.10f);
 
-        float pad = 200.0f;
-        float viewW = (maxX - minX) + pad;
-        float viewH = (maxY - minY) + pad;
+      float pad = 200.0f;
+      float viewW = (maxX - minX) + pad;
+      float viewH = (maxY - minY) + pad;
 
-        viewW = std::max(viewW, 1.0f);
-        viewH = std::max(viewH, 1.0f);
+      viewW = std::max(viewW, 1.0f);
+      viewH = std::max(viewH, 1.0f);
 
-        float zoomX = (float)RES_W / viewW;
-        float zoomY = (float)RES_H / viewH;
-				
-				float const zoom_factor = 0.50f;
-        float desiredZoom = std::min(zoomX, zoomY) * zoom_factor;
-        desiredZoom = std::clamp(desiredZoom, 0.25f, 2.0f); 
+      float zoomX = (float)RES_W / viewW;
+      float zoomY = (float)RES_H / viewH;
 
-        camera.zoom = camera.zoom + (desiredZoom - camera.zoom) * 0.05f;
+      float const zoom_factor = 0.50f;
+      float desiredZoom = std::min(zoomX, zoomY) * zoom_factor;
+      desiredZoom = std::clamp(desiredZoom, 0.25f, 2.0f);
+
+      camera.zoom = camera.zoom + (desiredZoom - camera.zoom) * 0.05f;
     }
 
-		gunSpawnTimer -= dt;
-		if (gunSpawnTimer <= 0.0f) {
-		    guns.push_back(spawnRandomGun(testMap, RES_W, RES_H));
-		    gunSpawnTimer = 10.0f; 
-		}
-		for (Player &pl : players) {
-    	if (pl.hitTimer > 0.0f) pl.hitTimer -= dt;
-		  if (!hasFlag(pl.status_flags, ALIVE)) {
-		      pl.respawnTimer -= dt;
-		      if (pl.respawnTimer <= 0.0f) {
-		          // Respawn at random position
-		          pl = initPlayer(); 
-		          pl.controls = pl.controls; // restore controls
-		      }
-		  }
-		}
+    gunSpawnTimer -= dt;
+    if (gunSpawnTimer <= 0.0f) {
+      guns.push_back(spawnRandomGun(testMap, RES_W, RES_H));
+      gunSpawnTimer = 10.0f;
+    }
+    for (Player &pl : players) {
+      if (pl.hitTimer > 0.0f)
+        pl.hitTimer -= dt;
+      if (!hasFlag(pl.status_flags, ALIVE)) {
+        pl.respawnTimer -= dt;
+        if (pl.respawnTimer <= 0.0f) {
+          Controls controls = pl.controls;
+          pl = initPlayer();
+          pl.controls = controls;
+        }
+      }
+    }
 
     BeginTextureMode(renderTarget);
     ClearBackground(SKYBLUE);
@@ -774,9 +768,10 @@ int main() {
     BeginMode2D(camera);
 
     renderLevel(testMap);
-    for (Player &player: players) {
-        if (!hasFlag(player.status_flags, ALIVE)) continue;
-        renderPlayer(player);
+    for (Player &player : players) {
+      if (!hasFlag(player.status_flags, ALIVE))
+        continue;
+      renderPlayer(player);
     }
     renderGuns(guns);
     renderProjectiles(projectiles);
@@ -785,11 +780,12 @@ int main() {
     EndDrawing();
     EndTextureMode();
 
-		int y = 10;
-		for (int i = 0; i < players.size(); i++) {
-		    DrawText(TextFormat("P%d Kills: %d", i, players[i].kills), 10, y, 20, WHITE);
-		    y += 25;
-		}
+    int y = 10;
+    for (int i = 0; i < players.size(); i++) {
+      DrawText(TextFormat("P%d Kills: %d", i, players[i].kills), 10, y, 20,
+               WHITE);
+      y += 25;
+    }
     renderToScreen(renderTarget);
   }
   UnloadRenderTexture(renderTarget);
