@@ -1,21 +1,23 @@
-# TECH
-- [] Geometry
-- [] Playable character
-- [] Collision detection with enviorment
-- [] Collision detection with objects
-- [] Pickups
-- [] Projectiles
-- [] Dynamic camera
-- [] Controller input
-- [] Menu/Game/settings
-- [] RenderToTexture
+# NICE THINGS
+- []Main menu 
+    - []Settings
+- []Sound
+- []Music
+- []Better art assets
 
+# TECH-ish THINGS
+- []Better way to design and load levels
+- []Prallax scrolling background
+- []Fullscreen
 
-# NON-TECH 
-- [] Sound
-- [] graphics
+# CONTENT
+- []More weapons
+- []More maps
 
-
-# QOL-features
-- [] Dynamic camera
-- [] Controller input
+# DESIGN/FEATURES
+- []Health bars
+- []Player indicators
+- []Reset to new map after rounds
+- []Moveable objects/boxes
+- []Bouncy objects
+- []Grenades
