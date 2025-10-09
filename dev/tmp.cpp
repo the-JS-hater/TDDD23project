@@ -2,7 +2,6 @@
 #include "stdio.h"
 #include "float.h"
 #include <algorithm>
-#include <string>
 #include <cmath>
 #include <cstdint>
 #include <vector>
@@ -22,6 +21,25 @@ enum Tile {
 using GameMap = std::vector<std::vector<Tile>>;
 
 int const TILE_SIZE = 64;
+GameMap testMap = {
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, TILE, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, TILE, VOID, VOID, VOID, VOID, VOID},
+    {TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, TILE, VOID, VOID, VOID, VOID},
+    {VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID, VOID},
+    {TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE, TILE},
+};
 
 enum PlayerState {
   GROUNDED 	= 1 << 0,
@@ -56,9 +74,18 @@ struct Projectile {
 	std::vector<Vector2> trail;
 };
 
+struct Grenade {
+    float x, y;
+    float dx, dy;
+    float radius;
+    float timer;
+    bool exploded;
+};
+
 struct Controls {
     int deviceId; 
-    int left, right, up, down, jump, dash, fire, grenade;
+    int left, right, up, down, jump, dash, fire;
+		int throwGrenade;
 };
 
 struct Player {
@@ -86,73 +113,12 @@ struct Player {
   int facing;
   uint32_t status_flags;
 
+	float grenade_cooldown = 0.0f;
+	float grenade_cooldown_time = 2.0f; 
+	int grenades = 3;
+
 	Controls controls;
 };
-
-struct Grenade {
-    float x, y;
-    float dx, dy;
-    float radius;
-    float fuse;              
-    float bounce;            
-    bool exploded = false;
-    std::vector<Vector2> trail;
-};
-
-enum GameState {
-    ROUND_ACTIVE,
-    ROUND_OVER,
-    MATCH_OVER
-};
-
-struct MatchInfo {
-    int totalRounds = 5;    
-    int currentRound = 1;
-    int p0Wins = 0;
-    int p1Wins = 0;
-    GameState state = ROUND_ACTIVE;
-    float roundOverTimer = 0.0f;
-    std::vector<std::string> mapFiles;
-};
-
-
-GameMap loadMapFromFile(const std::string& path) {
-    GameMap map;
-    FILE* file = fopen(path.c_str(), "r");
-    if (!file) {
-        TraceLog(LOG_ERROR, "Failed to open map file: %s", path.c_str());
-        return map;
-    }
-    int width, height;
-    if (fscanf(file, "%d %d\n", &width, &height) != 2) {
-        TraceLog(LOG_ERROR, "Invalid map file header: %s", path.c_str());
-        fclose(file);
-        return map;
-    }
-    map.resize(height, std::vector<Tile>(width, VOID));
-
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            int c = fgetc(file);
-            if (c == EOF || c == '\n' || c == '\r') {
-                x--; 
-                continue;
-            }
-
-            switch (c) {
-                case '#': map[y][x] = TILE; break;
-                default:  map[y][x] = VOID; break;
-            }
-        }
-    }
-    fclose(file);
-    return map;
-}
-
-void loadNextMap(MatchInfo &match, GameMap &map) {
-    int index = (match.currentRound - 1) % match.mapFiles.size();
-    map = loadMapFromFile(match.mapFiles[index]);
-}
 
 bool isActionDown(Controls const &c, int action) {
     if (c.deviceId == -1) {
@@ -214,7 +180,7 @@ void renderPlayer(Player const &player) {
         player.w, 
         player.h
     };
-    
+
 		if (player.facing < 0) {
         src.width = -src.width;
     }
@@ -222,15 +188,15 @@ void renderPlayer(Player const &player) {
     Vector2 origin = {0.0f, 0.0f};
 
     DrawTexturePro(testBoxBunny, src, dst, origin, 0.0f, WHITE);
-			
+
 	float shoulderY = player.y + player.h * 0.50;  
 	float shoulderX = (player.facing == 1) 
     ? player.x + player.w * 0.0f   
     : player.x + player.w * 1.0f;  
-	
+
 	float armThickness = player.w * 0.25;        
 	float armLength    = player.h * 0.45f;       
-	
+
 	if (!player.gun) {
 	    Rectangle arm = {
 	        shoulderX - armThickness * 0.5f,  
@@ -304,16 +270,40 @@ bool hasMapCollision(GameMap const &map, Player const &player) {
   return false;
 }
 
-void handlePlayerCollision(Player &player, GameMap const &currentMap, float const dt) {
+bool hasMapCollision(GameMap const &map, Rectangle const &rect) {
+  int rows = (int)map.size();
+  int cols = map.empty() ? 0 : (int)map[0].size();
+
+  int left = std::max(0, (int)std::floor(rect.x / TILE_SIZE));
+  int right =
+      std::min(cols - 1, (int)std::floor((rect.x + rect.width) / TILE_SIZE));
+  int top = std::max(0, (int)std::floor(rect.y / TILE_SIZE));
+  int bottom =
+      std::min(rows - 1, (int)std::floor((rect.y + rect.height) / TILE_SIZE));
+
+  for (int y = top; y <= bottom; ++y) {
+    for (int x = left; x <= right; ++x) {
+      if (map[y][x] == TILE) {
+        Rectangle tile = {(float)x * TILE_SIZE, (float)y * TILE_SIZE,
+                          (float)TILE_SIZE, (float)TILE_SIZE};
+        if (CheckCollisionRecs(rect, tile))
+          return true;
+      }
+    }
+  }
+  return false;
+}
+
+void handlePlayerCollision(Player &player, GameMap const &map, float const dt) {
   float move_x = player.dx * dt;
   player.x += move_x;
-  if (hasMapCollision(currentMap, player)) {
+  if (hasMapCollision(testMap, player)) {
     player.x -= move_x;
     player.dx = 0.0f;
   }
   float move_y = player.dy * dt;
   player.y += move_y;
-  if (hasMapCollision(currentMap, player)) {
+  if (hasMapCollision(testMap, player)) {
     player.y -= move_y;
     if (move_y > 0.0f) {
       player.dy = 0.0f;
@@ -328,67 +318,10 @@ void handlePlayerCollision(Player &player, GameMap const &currentMap, float cons
 }
 
 
-Vector2 findValidSpawn(const GameMap &map, float playerW, float playerH) {
-    int rows = (int)map.size();
-    int cols = rows > 0 ? (int)map[0].size() : 0;
-    if (rows == 0 || cols == 0) return {0, 0};
-
-    std::vector<Vector2> candidates;
-    int playerTilesWide = (int)ceil(playerW / TILE_SIZE);
-
-    for (int y = rows - 1; y > 0; --y) {
-        for (int x = 0; x <= cols - playerTilesWide; ++x) {
-            bool floorRun = true;
-            for (int i = 0; i < playerTilesWide; ++i) {
-                if (map[y][x + i] != TILE || map[y - 1][x + i] == TILE) {
-                    floorRun = false;
-                    break;
-                }
-            }
-            if (floorRun) {
-                candidates.push_back({(float)x, (float)y});
-            }
-        }
-    }
-    if (candidates.empty()) {
-        TraceLog(LOG_WARNING, "No valid floor found for spawn!");
-        return {0, 0};
-    }
-    for (int attempt = 0; attempt < 1000; ++attempt) {
-        Vector2 pick = candidates[GetRandomValue(0, (int)candidates.size() - 1)];
-        int tx = (int)pick.x;
-        int ty = (int)pick.y;
-
-        float spawnX = tx * TILE_SIZE + (TILE_SIZE * playerTilesWide - playerW) * 0.5f;
-        float spawnY = (ty - 4) * TILE_SIZE; 
-
-        Player test{};
-        test.x = spawnX;
-        test.w = playerW;
-        test.h = playerH;
-
-        for (int yDrop = 0; yDrop < TILE_SIZE * 6; yDrop++) {
-            test.y = spawnY + yDrop;
-            if (hasMapCollision(map, test)) {
-                test.y -= 2; 
-                break;
-            }
-        }
-        if (!hasMapCollision(map, test)) {
-            test.y -= 1; 
-            if (!hasMapCollision(map, test))
-                return {test.x, test.y};
-        }
-    }
-    TraceLog(LOG_WARNING, "No valid spawn found after 1000 attempts!");
-    return {0, 0};
-}
-
-
-void handlePlayerInput(Player &player, float dt, GameMap& currentMap) {
+void handlePlayerInput(Player &player, float dt) {
 	bool left  = isActionDown(player.controls, player.controls.left);
 	bool right = isActionDown(player.controls, player.controls.right);
-  
+
 	float accel_mod = (hasFlag(player.status_flags, DUCKING) &&
                      hasFlag(player.status_flags, GROUNDED))
                         ? 0.2f
@@ -415,7 +348,7 @@ void handlePlayerInput(Player &player, float dt, GameMap& currentMap) {
 
   player.dx =
       std::clamp(player.dx, -player.max_vel, player.max_vel * accel_mod);
-	
+
 	if (isActionDown(player.controls, player.controls.jump) && hasFlag(player.status_flags, GROUNDED)) {
 	    player.dy = -player.jump_force;
 	    clearFlag(player.status_flags, GROUNDED);
@@ -476,7 +409,7 @@ void handlePlayerInput(Player &player, float dt, GameMap& currentMap) {
     test.y -= diff;
     test.h = new_h;
 
-    if (!hasMapCollision(currentMap, test)) {
+    if (!hasMapCollision(testMap, test)) {
       clearFlag(player.status_flags, DUCKING);
       clearFlag(player.status_flags, SLIDING);
       player.y -= diff;
@@ -521,7 +454,7 @@ void handleGunPickups(Player &player, std::vector<Gun> &guns) {
   }
 }
 
-void handleShooting(Player &player, std::vector<Projectile> &projectiles,
+void handleShooting(Player &player, std::vector<Projectile> &projectiles, std::vector<Grenade> &grenades,
                     float dt) {
   if (!player.gun) {
     return;
@@ -540,31 +473,31 @@ void handleShooting(Player &player, std::vector<Projectile> &projectiles,
   if (isActionDown(player.controls, player.controls.fire) && gun->ammo > 0 && gun->cooldown <= 0.0f) {
     gun->cooldown = 1.0f / gun->fire_rate;
     gun->ammo--;
-			
+
 
 		float baseAngle = (player.facing == -1) ? M_PI : 0.0f;
 		float speed_factor = std::min(1.0f, std::fabs(player.dx) / player.max_vel);
 		float jump_factor = hasFlag(player.status_flags, GROUNDED) ? 0.0f : 2.5f;
 		float spread_angle = gun->spread * (1.0f + speed_factor + jump_factor);
 		float angle = baseAngle + ((rand() / (float)RAND_MAX) - 0.5f) * spread_angle;
-    
+
 		float vx = cosf(angle) * gun->projectile_speed;
     float vy = sinf(angle) * gun->projectile_speed;
-	
+
 		float shoulderY = player.y + player.h * 0.30f;
 		float shoulderX = (player.facing == 1) 
 		    ? player.x + player.w   
 		    : player.x;             
-		
+
 		float projX = shoulderX;
 		float projY = shoulderY;
-		
+
 		if (player.facing == 1) {
 		    projX += 5.0f;  
 		} else {
 		    projX -= 5.0f;  
 		}
-		
+
 		projectiles.push_back({
 		    projX,
 		    projY,
@@ -575,30 +508,28 @@ void handleShooting(Player &player, std::vector<Projectile> &projectiles,
 				player.id
 		});
   }
+	if (player.grenade_cooldown > 0.0f)
+	    player.grenade_cooldown -= dt;
+
+	if (isActionPressed(player.controls, player.controls.throwGrenade) &&
+	    player.grenades > 0 &&
+	    player.grenade_cooldown <= 0.0f)
+	{
+	    float angle = (player.facing == 1) ? 0.0f : M_PI;
+	    float speed = 700.0f;
+	    grenades.push_back({
+	        player.x + player.w / 2,
+	        player.y + player.h * 0.3f,
+	        cosf(angle) * speed,
+	        -500.0f,  
+	        10.0f,
+	        3.0f,     
+	        false
+	    });
+	    player.grenade_cooldown = player.grenade_cooldown_time;
+	    player.grenades--;
+	}
 }
-
-
-void handleGrenadeThrow(Player &player, std::vector<Grenade> &grenades) {
-    if (isActionPressed(player.controls, player.controls.grenade)) {
-        Grenade g;
-        g.radius = 12.0f;
-        g.fuse = 2.5f;
-        g.bounce = 0.8f;
-        g.trail.clear();
-        g.exploded = false;
-
-        float throwSpeed = 700.0f;
-        float throwAngle = (player.facing == 1) ? -M_PI / 5.0f : M_PI + M_PI / 5.0f; 
-        g.dx = cosf(throwAngle) * throwSpeed + player.dx * 0.5f; 
-        g.dy = sinf(throwAngle) * throwSpeed + player.dy * 0.5f;
-
-        g.x = player.x + player.w / 2 + (player.facing * 40.0f);
-        g.y = player.y + player.h * 0.4f;
-
-        grenades.push_back(g);
-    }
-}
-
 
 Gun spawnRandomGun(GameMap const &map, int screenWidth, int screenHeight) {
     Gun gun = {};
@@ -699,137 +630,70 @@ void updateProjectiles(std::vector<Projectile> &projectiles, float dt,
 }
 
 
-void updateGrenades(std::vector<Grenade> &grenades, float dt,
-                    const GameMap &map, std::vector<Player> &players,
-                    std::vector<Projectile> &projectiles) {
-    const float gravity = 1500.0f;
-    const float EPS = 0.1f;       
-    const float FLOOR_EPS = 2.0f; 
-    const float MIN_BOUNCE_SPEED = 60.0f;
+void updateGrenades(std::vector<Grenade> &grenades, float dt, GameMap const &map) {
+    float bounce = 0.6f;
+    float gravity = 2000.0f;
 
     for (size_t i = 0; i < grenades.size();) {
         Grenade &g = grenades[i];
-
-        g.trail.push_back({g.x, g.y});
-        if (g.trail.size() > 25) g.trail.erase(g.trail.begin());
-
-        g.fuse -= dt;
-        if (g.fuse <= 0.0f && !g.exploded) {
-            g.exploded = true;
-
-            int numProjectiles = 16;
-            float speed = 600.0f;
-            for (int j = 0; j < numProjectiles; ++j) {
-                float angle = j * (2 * M_PI / numProjectiles);
-                projectiles.push_back({
-                    g.x, g.y,
-                    cosf(angle) * speed,
-                    sinf(angle) * speed,
-                    0.0f,
-                    400.0f,
-                    -1
-                });
-            }
-        }
-        if (g.exploded) {
-            grenades[i] = grenades.back();
-            grenades.pop_back();
-            continue;
-        }
+        g.timer -= dt;
         g.dy += gravity * dt;
 
-        float nextX = g.x + g.dx * dt;
-        float nextY = g.y + g.dy * dt;
-
-        Rectangle nextRect = {nextX - g.radius, nextY - g.radius, g.radius * 2, g.radius * 2};
-
-        bool grounded = false;
-
-        for (int y = 0; y < (int)map.size(); ++y) {
-            for (int x = 0; x < (int)map[y].size(); ++x) {
-                if (map[y][x] != TILE) continue;
-                Rectangle tile = {(float)x * TILE_SIZE, (float)y * TILE_SIZE,
-                                  (float)TILE_SIZE, (float)TILE_SIZE};
-
-                if (CheckCollisionRecs(nextRect, tile)) {
-                    if (g.dy > 0 && g.y + g.radius <= tile.y + FLOOR_EPS) {
-                        grounded = true;
-                        nextY = tile.y - g.radius;
-                        g.dy *= -g.bounce;
-
-                        if (fabs(g.dy) < MIN_BOUNCE_SPEED) g.dy = 0;
-                    }
-                    else if (g.dy < 0 && g.y - g.radius >= tile.y + TILE_SIZE - FLOOR_EPS) {
-                        nextY = tile.y + TILE_SIZE + g.radius;
-                        g.dy *= -g.bounce;
-                    }
-                }
-            }
+        g.x += g.dx * dt;
+        Rectangle checkX = {g.x - g.radius, g.y - g.radius, g.radius * 2, g.radius * 2};
+        if (hasMapCollision(map, checkX)) {
+            g.x -= g.dx * dt;
+            g.dx = -g.dx * bounce;
         }
 
-        Rectangle horizRect = {nextX - g.radius, g.y - g.radius, g.radius * 2, g.radius * 2};
-        for (int y = 0; y < (int)map.size(); ++y) {
-            for (int x = 0; x < (int)map[y].size(); ++x) {
-                if (map[y][x] != TILE) continue;
-                Rectangle tile = {(float)x * TILE_SIZE, (float)y * TILE_SIZE,
-                                  (float)TILE_SIZE, (float)TILE_SIZE};
-
-                if (CheckCollisionRecs(horizRect, tile)) {
-                    if (g.dx > 0 && g.x + g.radius <= tile.x + EPS) {
-                        nextX = tile.x - g.radius;
-                        g.dx *= -g.bounce;
-                    } else if (g.dx < 0 && g.x - g.radius >= tile.x + TILE_SIZE - EPS) {
-                        nextX = tile.x + TILE_SIZE + g.radius;
-                        g.dx *= -g.bounce;
-                    }
-                }
-            }
+        g.y += g.dy * dt;
+        Rectangle checkY = {g.x - g.radius, g.y - g.radius, g.radius * 2, g.radius * 2};
+        if (hasMapCollision(map, checkY)) {
+            g.y -= g.dy * dt;
+            g.dy = -g.dy * bounce;
         }
-        g.x = nextX;
-        g.y = nextY;
-        g.dx *= 0.98f;
 
-        if (grounded && fabs(g.dy) < 0.1f && fabs(g.dx) < 5.0f)
-      	{
-						g.dy = g.dx = 0;
-				}
+        if (g.timer <= 0.0f) {
+            g.exploded = true;
+        }
 
-				for (auto &pl : players) {
-    			if (!hasFlag(pl.status_flags, ALIVE)) continue;
+        if (g.exploded) {
+            DrawCircle(g.x, g.y, 40, Fade(RED, 0.6f));
+            grenades[i] = grenades.back();
+            grenades.pop_back();
+        } else {
+            i++;
+        }
+    }
 
-    			Rectangle prect = {pl.x, pl.y, pl.w, pl.h};
+		if (g.timer <= 0.0f || hasMapCollision(map, grenadeRect)) {
+		    explodeGrenade(g, projectiles);
+		    grenades.erase(grenades.begin() + i);
+		    continue;
+		}
+}
 
-    			if (CheckCollisionCircleRec({g.x, g.y}, g.radius, prect)) {
-    			    float closestX = std::clamp(g.x, prect.x, prect.x + prect.width);
-    			    float closestY = std::clamp(g.y, prect.y, prect.y + prect.height);
 
-    			    float dx = g.x - closestX;
-    			    float dy = g.y - closestY;
-    			    float dist2 = dx * dx + dy * dy;
+void explodeGrenade(Grenade &g, std::vector<Projectile> &projectiles) {
+    int numFragments = 12; 
+    float speed = 500.0f;  
+    float spread = 2.0f * M_PI / numFragments; 
 
-    			    if (dist2 < g.radius * g.radius && dist2 > 0.0001f) {
-    			        float dist = sqrtf(dist2);
-    			        float overlap = g.radius - dist;
+    for (int i = 0; i < numFragments; i++) {
+        float angle = i * spread + GetRandomValue(-10, 10) * DEG2RAD;
+        float dx = cosf(angle) * speed;
+        float dy = sinf(angle) * speed;
 
-    			        dx /= dist;
-    			        dy /= dist;
+        Projectile frag;
+        frag.x = g.x;
+        frag.y = g.y;
+        frag.dx = dx;
+        frag.dy = dy;
+        frag.traveled = 0.0f;
+        frag.max_distance = 150.0f; 
+        frag.trail.clear();
 
-    			        g.x += dx * overlap;
-    			        g.y += dy * overlap;
-
-    			        float vn = g.dx * dx + g.dy * dy;
-    			        if (vn < 0) { 
-    			            g.dx -= (1 + g.bounce) * vn * dx;
-    			            g.dy -= (1 + g.bounce) * vn * dy;
-    			        }
-    			        g.dx += pl.dx * 0.2f;
-    			        g.dy += pl.dy * 0.2f;
-    			        g.dx *= 0.98f;
-    			        g.dy *= 0.98f;
-    			    }
-    				}
-					}
-        ++i;
+        projectiles.push_back(frag);
     }
 }
 
@@ -843,6 +707,13 @@ void renderGuns(std::vector<Gun> const &guns) {
 }
 
 
+void renderGrenades(std::vector<Grenade> const &grenades) {
+    for (auto const &g : grenades) {
+        DrawCircle(g.x, g.y, g.radius, DARKGRAY);
+    }
+}
+
+
 void renderProjectiles(std::vector<Projectile> const &projectiles) {
 	for (auto const &p : projectiles) {
 	    for (size_t i = 0; i < p.trail.size(); i++) {
@@ -851,17 +722,6 @@ void renderProjectiles(std::vector<Projectile> const &projectiles) {
 	    }
 	    DrawCircleV({p.x, p.y}, 4, ORANGE);
 	}
-}
-
-
-void renderGrenades(std::vector<Grenade> const &grenades) {
-    for (auto const &g : grenades) {
-        for (size_t i = 0; i < g.trail.size(); i++) {
-            float alpha = (i + 1) / (float)g.trail.size();
-            DrawCircleV(g.trail[i], 3, Fade(GREEN, alpha * 0.6f));
-        }
-        DrawCircleV({g.x, g.y}, g.radius, DARKGREEN);
-    }
 }
 
 
@@ -884,16 +744,12 @@ void renderToScreen(RenderTexture2D renderTarget) {
   DrawTexturePro(renderTarget.texture, src, dst, {0, 0}, 0.0f, WHITE);
 }
 
-
-
-
-Player initPlayer(GameMap &currentMap) {
+Player initPlayer() {
   Player player = {};
+  player.x = 10.0f;
+  player.y = 10.0f;
   player.w = 75.0f;
   player.h = 100.0f;
-  Vector2 spawn = findValidSpawn(currentMap, player.w, player.h);
-	player.x = spawn.x;
-	player.y = spawn.y;
   player.original_h = player.h;
   player.dx = 0.0f;
   player.dy = 0.0f;
@@ -916,7 +772,7 @@ Player initPlayer(GameMap &currentMap) {
 
   player.status_flags = 0;
   setFlag(player.status_flags, GROUNDED);
-	
+
 	player.max_health = 100;
 	player.health = player.max_health;
   setFlag(player.status_flags, ALIVE);
@@ -924,52 +780,6 @@ Player initPlayer(GameMap &currentMap) {
   return player;
 }
 
-void resetPlayer(Player &player, GameMap &currentMap) {
-		player.dx = 0.0f;
-    player.dy = 0.0f;
-
-    player.w = 75.0f;
-    player.h = 100.0f;
-    player.original_h = player.h;
-
-		Vector2 spawn = findValidSpawn(currentMap, player.w, player.h);
-    player.x = spawn.x;
-    player.y = spawn.y;
-    
-    player.dash_timer = 0.0f;
-    player.slide_timer = 0.0f;
-    player.facing = 1;
-
-    player.health = player.max_health;
-    player.hitTimer = 0.0f;
-    player.respawnTimer = 0.0f;
-
-    player.gun = nullptr;
-
-    player.status_flags = 0;
-    setFlag(player.status_flags, GROUNDED);
-    setFlag(player.status_flags, ALIVE);
-}
-
-
-void startNewRound(MatchInfo &match, GameMap &map, std::vector<Player> &players) {
-    loadNextMap(match, map);
-
-    for (auto &pl : players) {
-        resetPlayer(pl, map);
-        while (hasMapCollision(map, pl)) {
-            pl.x = GetRandomValue(0, RES_W - pl.w);
-            pl.y = GetRandomValue(0, RES_H / 2);
-        }
-    }
-
-    match.state = ROUND_ACTIVE;
-}
-
-bool isMatchOver(const MatchInfo &match) {
-    int majority = match.totalRounds / 2 + 1;
-    return (match.p0Wins >= majority || match.p1Wins >= majority);
-}
 
 void init_resources(){
 	testDudeTex = LoadTexture("resources/dude75x100.png");
@@ -983,43 +793,31 @@ int main() {
   InitWindow(1080, 720, "Game");
   SetTargetFPS(60);
   HideCursor();
-	
+
 	init_resources();
-	
-	GameMap currentMap;
-	MatchInfo match;
-	if (match.mapFiles.empty()) {
-	    match.mapFiles = {
-	        "resources/maps/test.map",
-	        "resources/maps/test2.map",
-	        "resources/maps/test3.map"
-	    };
-	    loadNextMap(match, currentMap);
-	}
 
 	Camera2D camera = {0};
 	camera.target = {RES_W/2.0f, RES_H/2.0f};
-	camera.offset = {(float)RES_W/2, (float)RES_H/2}; 
+	camera.offset = {(float)RES_W/2, (float)RES_H/2}; // screen center
 	camera.zoom = 1.0f;
-  
+
 	RenderTexture2D renderTarget = LoadRenderTexture(RES_W, RES_H);
-	
+
   std::vector<Gun> guns;
-	std::vector<Grenade> grenades;
   std::vector<Projectile> projectiles;
+	std::vector<Grenade> grenades;
 	float gunSpawnTimer = 0.0f;
-  
-  Player player0 = initPlayer(currentMap);
+
+  Player player0 = initPlayer();
   player0.controls = {
       -1,             
       KEY_A, KEY_D,   
       KEY_W, KEY_S,   
       KEY_SPACE,      
       KEY_LEFT_SHIFT, 
-      KEY_J,
-			KEY_K
+      KEY_J, KEY_K           
   };
-  Player player1 = initPlayer(currentMap);
+  Player player1 = initPlayer();
   player1.x = 500.0f;  
   player1.controls = {
       0,  
@@ -1037,22 +835,20 @@ int main() {
 	player1.id = 1;
 
 	for (int i = 0; i < 3; i++) {
-	    guns.push_back(spawnRandomGun(currentMap, RES_W, RES_H));
+	    guns.push_back(spawnRandomGun(testMap, RES_W, RES_H));
 	}
 
-	
-	while (!WindowShouldClose()) {
+  while (!WindowShouldClose()) {
     float dt = GetFrameTime();
-   	
+
 		for (Player &player: players) {
-			handlePlayerInput(player, dt, currentMap);
-    	handlePlayerCollision(player, currentMap, dt);
+			handlePlayerInput(player, dt);
+    	handlePlayerCollision(player, testMap, dt);
     	handleGunPickups(player, guns);
-    	handleShooting(player, projectiles, dt);
-			handleGrenadeThrow(player, grenades);
+    	handleShooting(player, projectiles, grenades, dt);
 		}
-		updateGrenades(grenades, dt, currentMap, players, projectiles);
-		updateProjectiles(projectiles, dt, currentMap, players);
+		updateProjectiles(projectiles, dt, testMap, players);
+		updateGrenades(grenades, dt, testMap);
 
     Vector2 avgPos = {0, 0};
     float minX = FLT_MAX, minY = FLT_MAX, maxX = -FLT_MAX, maxY = -FLT_MAX;
@@ -1083,81 +879,29 @@ int main() {
 
         float zoomX = (float)RES_W / viewW;
         float zoomY = (float)RES_H / viewH;
-				
+
 				float const zoom_factor = 0.50f;
         float desiredZoom = std::min(zoomX, zoomY) * zoom_factor;
         desiredZoom = std::clamp(desiredZoom, 0.25f, 2.0f); 
 
         camera.zoom = camera.zoom + (desiredZoom - camera.zoom) * 0.05f;
     }
-	
-		float mapWidth  = currentMap[0].size() * TILE_SIZE;
-		float mapHeight = currentMap.size() * TILE_SIZE;
-		int const falloffBuffer = 1000;
-		for (auto &pl : players) {
-		    if (hasFlag(pl.status_flags, ALIVE)) {
-		        bool fellBelow = (pl.y > mapHeight + falloffBuffer);
-		        bool fellLeft = (pl.x + pl.w < -falloffBuffer); 
-		
-		        if (fellBelow || fellLeft) {
-		            clearFlag(pl.status_flags, ALIVE);
-		            pl.respawnTimer = 0.0f;
-		            pl.health = 0.0f;
-		        }
-		    }
-		}
-		
+
 		gunSpawnTimer -= dt;
 		if (gunSpawnTimer <= 0.0f) {
-		    guns.push_back(spawnRandomGun(currentMap, RES_W, RES_H));
+		    guns.push_back(spawnRandomGun(testMap, RES_W, RES_H));
 		    gunSpawnTimer = 10.0f; 
 		}
-
 		for (Player &pl : players) {
-		    if (pl.hitTimer > 0.0f) pl.hitTimer -= dt;
-		}
-		
-		aliveCount = 0;
-		int alivePlayerId = -1;
-		for (int i = 0; i < players.size(); i++) {
-		    if (hasFlag(players[i].status_flags, ALIVE)) {
-		        aliveCount++;
-		        alivePlayerId = i;
-		    }
-		}
-		
-		if (match.state == ROUND_ACTIVE) {
-		    if (aliveCount <= 1) {
-		        match.state = ROUND_OVER;
-		        match.roundOverTimer = 3.0f;
-		
-		        if (alivePlayerId == 0) match.p0Wins++;
-		        if (alivePlayerId == 1) match.p1Wins++;
-		    }
-		}
-		
-		else if (match.state == ROUND_OVER) {
-		    match.roundOverTimer -= dt;
-		    if (match.roundOverTimer <= 0.0f) {
-		        match.currentRound++;
-		        if (isMatchOver(match)) {
-		            match.state = MATCH_OVER;
-		        } else {
-		            startNewRound(match, currentMap, players);
-		        }
-		    }
-		}
-		
-		else if (match.state == MATCH_OVER) {
-		    if (IsKeyPressed(KEY_R)) {
-		        match = MatchInfo(); 
-		        match.mapFiles = {
-		            "resources/maps/test.map",
-		            "resources/maps/test2.map",
-		            "resources/maps/test3.map"
-		        };
-		        startNewRound(match, currentMap, players);
-		    }
+    	if (pl.hitTimer > 0.0f) pl.hitTimer -= dt;
+		  if (!hasFlag(pl.status_flags, ALIVE)) {
+		      pl.respawnTimer -= dt;
+		      if (pl.respawnTimer <= 0.0f) {
+		          // Respawn at random position
+		          pl = initPlayer(); 
+		          pl.controls = pl.controls; // restore controls
+		      }
+		  }
 		}
 
     BeginTextureMode(renderTarget);
@@ -1166,7 +910,7 @@ int main() {
     BeginDrawing();
     BeginMode2D(camera);
 
-    renderLevel(currentMap);
+    renderLevel(testMap);
     for (Player &player: players) {
         if (!hasFlag(player.status_flags, ALIVE)) continue;
         renderPlayer(player);
@@ -1179,20 +923,14 @@ int main() {
     EndDrawing();
     EndTextureMode();
 
-		DrawText(TextFormat("Round %d / %d", match.currentRound, match.totalRounds), 20, 20, 30, WHITE);
-		DrawText(TextFormat("P1 Wins: %d  P2 Wins: %d", match.p0Wins, match.p1Wins), 20, 60, 30, WHITE);
-		
-		if (match.state == ROUND_OVER) {
-		    DrawText("Round Over!", RES_W/2 - 150, RES_H/2 - 40, 60, RED);
-		}
-		if (match.state == MATCH_OVER) {
-		    const char *winner =
-		        (match.p0Wins > match.p1Wins) ? "PLAYER 1 WINS" : "PLAYER 2 WINS";
-		    DrawText(winner, RES_W/2 - 200, RES_H/2 - 40, 60, YELLOW);
-		    DrawText("Press R to Restart", RES_W/2 - 180, RES_H/2 + 40, 30, WHITE);
+		int y = 10;
+		for (int i = 0; i < players.size(); i++) {
+		    DrawText(TextFormat("P%d Kills: %d", i, players[i].kills), 10, y, 20, WHITE);
+		    y += 25;
 		}
     renderToScreen(renderTarget);
   }
   UnloadRenderTexture(renderTarget);
   CloseWindow();
 }
+
