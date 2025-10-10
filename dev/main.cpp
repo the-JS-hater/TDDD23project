@@ -1,4 +1,5 @@
 #include "raylib.h"
+#include "raymath.h"
 #include "stdio.h"
 #include "float.h"
 #include <algorithm>
@@ -36,6 +37,20 @@ bool hasFlag(uint32_t flags, PlayerState s) { return (flags & s) != 0; }
 void setFlag(uint32_t &flags, PlayerState s) { flags |= s; }
 void clearFlag(uint32_t &flags, PlayerState s) { flags &= ~s; }
 
+enum PickupType { GUN, GRENADE };
+
+struct Pickup {
+    PickupType type;
+    Vector2 position;
+    bool active = true;
+
+    int gunId = -1;       
+    int grenadeAmount = 1;
+
+		int w = 20;
+		int h = 20;
+};
+
 struct Gun {
   float x, y, w, h;
   int ammo;
@@ -58,7 +73,7 @@ struct Projectile {
 
 struct Controls {
     int deviceId; 
-    int left, right, up, down, jump, dash, fire, grenade;
+    int left, right, up, down, jump, dash, fire, grenade, interact;
 };
 
 struct Player {
@@ -85,6 +100,11 @@ struct Player {
 	float respawnTimer = 0.0f;
   int facing;
   uint32_t status_flags;
+
+	int grenadeCount = 2;
+	int maxGrenades = 3;
+	bool canInteract = false;
+	int nearbyPickupIndex = -1;
 
 	Controls controls;
 };
@@ -579,7 +599,9 @@ void handleShooting(Player &player, std::vector<Projectile> &projectiles,
 
 
 void handleGrenadeThrow(Player &player, std::vector<Grenade> &grenades) {
-    if (isActionPressed(player.controls, player.controls.grenade)) {
+    if (isActionPressed(player.controls, player.controls.grenade) && player.grenadeCount > 0) {
+        player.grenadeCount--; // Consume one grenade
+        
         Grenade g;
         g.radius = 12.0f;
         g.fuse = 2.5f;
@@ -834,6 +856,133 @@ void updateGrenades(std::vector<Grenade> &grenades, float dt,
 }
 
 
+void TryInteract(Player &player, std::vector<Pickup> &pickups, std::vector<Gun> &guns)
+{
+    if (!player.canInteract || player.nearbyPickupIndex == -1) return;
+
+    Pickup &p = pickups[player.nearbyPickupIndex];
+    if (!p.active) return;
+
+    switch (p.type)
+    {
+        case GUN:
+        {
+            // If player already has a gun, drop it first
+            if (player.gun)
+            {
+                // Create pickup for current gun
+                Pickup dropped;
+                dropped.type = GUN;
+                dropped.position = { player.x + player.w/2, player.y + player.h/2 };
+                dropped.active = true;
+                dropped.gunId = (int)(player.gun - &guns[0]);
+                dropped.w = player.gun->w;
+                dropped.h = player.gun->h;
+                
+                pickups.push_back(dropped);
+                player.gun->picked_up = false;
+            }
+
+            // Pick up the new gun
+            if (p.gunId >= 0 && p.gunId < (int)guns.size())
+            {
+                Gun &newGun = guns[p.gunId];
+                newGun.picked_up = true;
+                player.gun = &newGun;
+                p.active = false;
+            }
+            break;
+        }
+
+        case GRENADE:
+        {
+            if (player.grenadeCount < player.maxGrenades)
+            {
+                player.grenadeCount = std::min(
+                    player.grenadeCount + p.grenadeAmount,
+                    player.maxGrenades
+                );
+                p.active = false;
+            }
+            break;
+        }
+    }
+    
+    // Reset interaction state
+    player.nearbyPickupIndex = -1;
+    player.canInteract = false;
+}
+
+
+void SpawnPickup(std::vector<Pickup> &pickups, Vector2 pos, PickupType type, int gunId = -1)
+{
+    Pickup p;
+    p.type = type;
+    p.position = pos;
+    p.active = true;
+    p.gunId = gunId;
+    pickups.push_back(p);
+}
+
+
+void SpawnGunWithPickup(std::vector<Gun> &guns, std::vector<Pickup> &pickups, const GameMap &map) {
+    Gun gun = {};
+    gun.w = 60;
+    gun.h = 30;
+    gun.ammo = 30;
+    gun.fire_rate = 5.0f;
+    gun.projectile_speed = 800.0f;
+    gun.spread = 0.15f;
+    gun.range = 600.0f;
+    gun.picked_up = false;
+    gun.cooldown = 0.0f;
+
+    while (true) {
+        int x = GetRandomValue(0, RES_W - gun.w);
+        int y = GetRandomValue(0, RES_H - gun.h);
+
+        Rectangle rect = {(float)x, (float)y, gun.w, gun.h};
+        bool collision = false;
+
+        int rows = (int)map.size();
+        int cols = map.empty() ? 0 : (int)map[0].size();
+
+        int left = std::max(0, (int)std::floor(rect.x / TILE_SIZE));
+        int right = std::min(cols - 1, (int)std::floor((rect.x + rect.width) / TILE_SIZE));
+        int top = std::max(0, (int)std::floor(rect.y / TILE_SIZE));
+        int bottom = std::min(rows - 1, (int)std::floor((rect.y + rect.height) / TILE_SIZE));
+
+        for (int yy = top; yy <= bottom && !collision; ++yy) {
+            for (int xx = left; xx <= right && !collision; ++xx) {
+                if (map[yy][xx] == TILE) {
+                    Rectangle tile = {(float)xx * TILE_SIZE, (float)yy * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+                    if (CheckCollisionRecs(rect, tile)) {
+                        collision = true;
+                    }
+                }
+            }
+        }
+        if (!collision) {
+            gun.x = (float)x;
+            gun.y = (float)y;
+            break;
+        }
+    }
+    guns.push_back(gun);
+
+		Pickup p;
+		p.type = GUN;
+		p.position = {gun.x + gun.w / 2, gun.y + gun.h / 2};
+		p.active = true;
+		p.gunId = (int)(guns.size() - 1);
+		
+		p.w = gun.w;
+		p.h = gun.h;
+		
+		pickups.push_back(p);
+}
+
+
 void renderGuns(std::vector<Gun> const &guns) {
   for (auto const &gun : guns) {
     if (!gun.picked_up) {
@@ -1004,11 +1153,15 @@ int main() {
   
 	RenderTexture2D renderTarget = LoadRenderTexture(RES_W, RES_H);
 	
-  std::vector<Gun> guns;
 	std::vector<Grenade> grenades;
   std::vector<Projectile> projectiles;
+  std::vector<Gun> guns;
+	std::vector<Pickup> pickups;
 	float gunSpawnTimer = 0.0f;
   
+	SpawnPickup(pickups, {300, 200}, GRENADE);
+	SpawnPickup(pickups, {600, 250}, GRENADE);
+
   Player player0 = initPlayer(currentMap);
   player0.controls = {
       -1,             
@@ -1017,7 +1170,8 @@ int main() {
       KEY_SPACE,      
       KEY_LEFT_SHIFT, 
       KEY_J,
-			KEY_K
+			KEY_K,
+			KEY_E
   };
   Player player1 = initPlayer(currentMap);
   player1.x = 500.0f;  
@@ -1030,26 +1184,50 @@ int main() {
       GAMEPAD_BUTTON_RIGHT_FACE_DOWN,  
       GAMEPAD_BUTTON_RIGHT_FACE_RIGHT, 
       GAMEPAD_BUTTON_RIGHT_TRIGGER_1,   
-      GAMEPAD_BUTTON_RIGHT_TRIGGER_2   
+      GAMEPAD_BUTTON_RIGHT_TRIGGER_2,   
+      GAMEPAD_BUTTON_LEFT_TRIGGER_2   
   };
 	std::vector<Player> players{player0, player1};
 	player0.id = 0;
 	player1.id = 1;
-
-	for (int i = 0; i < 3; i++) {
-	    guns.push_back(spawnRandomGun(currentMap, RES_W, RES_H));
-	}
-
 	
 	while (!WindowShouldClose()) {
     float dt = GetFrameTime();
-   	
-		for (Player &player: players) {
-			handlePlayerInput(player, dt, currentMap);
-    	handlePlayerCollision(player, currentMap, dt);
-    	handleGunPickups(player, guns);
+			for (Player &player: players) {
+			    handlePlayerInput(player, dt, currentMap);
+			    handlePlayerCollision(player, currentMap, dt);
+    	player.canInteract = false;
+    	player.nearbyPickupIndex = -1;
+
+    	Rectangle playerRect = { player.x, player.y, player.w, player.h };
+    	
+    	for (int i = 0; i < pickups.size(); i++) {
+    	    if (!pickups[i].active) continue;
+
+    	    Rectangle pickupRect = { 
+    	        pickups[i].position.x - pickups[i].w / 2.0f, 
+    	        pickups[i].position.y - pickups[i].h / 2.0f, 
+    	        (float)pickups[i].w, 
+    	        (float)pickups[i].h 
+    	    };
+
+    	    if (CheckCollisionRecs(playerRect, pickupRect)) {
+    	        player.canInteract = true;
+    	        player.nearbyPickupIndex = i;
+    	        
+    	        if (pickups[i].type == GRENADE) {
+    	            TryInteract(player, pickups, guns);
+    	        }
+    	        break; 
+    	    }
+    	}
+    	if (isActionPressed(player.controls, player.controls.interact) && player.canInteract) {
+    	    TryInteract(player, pickups, guns);
+    	}
     	handleShooting(player, projectiles, dt);
-			handleGrenadeThrow(player, grenades);
+    	if (player.grenadeCount > 0) {
+    	    handleGrenadeThrow(player, grenades);
+    	}
 		}
 		updateGrenades(grenades, dt, currentMap, players, projectiles);
 		updateProjectiles(projectiles, dt, currentMap, players);
@@ -1109,7 +1287,7 @@ int main() {
 		
 		gunSpawnTimer -= dt;
 		if (gunSpawnTimer <= 0.0f) {
-		    guns.push_back(spawnRandomGun(currentMap, RES_W, RES_H));
+		    SpawnGunWithPickup(guns, pickups, currentMap);
 		    gunSpawnTimer = 10.0f; 
 		}
 
@@ -1172,6 +1350,13 @@ int main() {
         renderPlayer(player);
     }
     renderGuns(guns);
+
+		for (auto &p : pickups) {
+		    if (!p.active) continue;
+		
+		    Color c = (p.type == GUN) ? ORANGE : SKYBLUE;
+		    DrawCircleV(p.position, 8, c);
+		}
     renderProjectiles(projectiles);
 		renderGrenades(grenades);
 
